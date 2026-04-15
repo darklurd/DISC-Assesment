@@ -8,22 +8,23 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { font-size: 16px; }
     body { background: #F2F4F8; -webkit-font-smoothing: antialiased; }
-    @keyframes fadeUp      { from { opacity:0; transform:translateY(24px) } to { opacity:1; transform:translateY(0) } }
-    @keyframes fadeIn      { from { opacity:0 } to { opacity:1 } }
+    @keyframes fadeUp      { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
     @keyframes float       { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
     @keyframes slideInFwd  { from{opacity:0;transform:translateX(40px) scale(.97)} to{opacity:1;transform:translateX(0) scale(1)} }
     @keyframes slideInBwd  { from{opacity:0;transform:translateX(-40px) scale(.97)} to{opacity:1;transform:translateX(0) scale(1)} }
     @keyframes slideOutFwd { from{opacity:1;transform:translateX(0) scale(1)} to{opacity:0;transform:translateX(-40px) scale(.97)} }
     @keyframes slideOutBwd { from{opacity:1;transform:translateX(0) scale(1)} to{opacity:0;transform:translateX(40px) scale(.97)} }
-    .anim-fadeUp      { animation: fadeUp .9s cubic-bezier(.22,1,.36,1) both; }
-    .slide-in-fwd     { animation: slideInFwd  .42s cubic-bezier(.22,1,.36,1) both; }
-    .slide-in-bwd     { animation: slideInBwd  .42s cubic-bezier(.22,1,.36,1) both; }
-    .slide-out-fwd    { animation: slideOutFwd .22s cubic-bezier(.4,0,1,1) both; }
-    .slide-out-bwd    { animation: slideOutBwd .22s cubic-bezier(.4,0,1,1) both; }
+    @keyframes pulse       { 0%,100%{opacity:1} 50%{opacity:.35} }
+    .slide-in-fwd  { animation: slideInFwd  .42s cubic-bezier(.22,1,.36,1) both; }
+    .slide-in-bwd  { animation: slideInBwd  .42s cubic-bezier(.22,1,.36,1) both; }
+    .slide-out-fwd { animation: slideOutFwd .22s cubic-bezier(.4,0,1,1) both; }
+    .slide-out-bwd { animation: slideOutBwd .22s cubic-bezier(.4,0,1,1) both; }
     .btn-primary {
       display:block; width:100%; padding:clamp(12px,3vw,16px);
       background:linear-gradient(135deg,#1B3A6B 0%,#2A5298 100%);
@@ -33,7 +34,7 @@
       box-shadow:0 4px 18px rgba(27,58,107,.3);
       transition:transform .3s ease, box-shadow .3s ease;
     }
-    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(27,58,107,.38); }
+    .btn-primary:hover  { transform:translateY(-2px); box-shadow:0 8px 24px rgba(27,58,107,.38); }
     .btn-primary:active { transform:translateY(0); }
     .btn-primary:disabled { background:#C8CDD8; box-shadow:none; cursor:not-allowed; transform:none; }
     .btn-ghost {
@@ -47,8 +48,8 @@
     .opt-btn {
       width:100%; text-align:left; cursor:pointer;
       padding:clamp(13px,3vw,17px) clamp(14px,3.5vw,20px);
-      background:#F8F9FC; border:1.5px solid #E2E6EF;
-      border-radius:12px; display:flex; align-items:center; gap:12px;
+      background:#F8F9FC; border:1.5px solid #E2E6EF; border-radius:12px;
+      display:flex; align-items:center; gap:12px;
       font-family:"Poppins",sans-serif; font-size:clamp(13px,2.5vw,14.5px); font-weight:400; color:#2D3748;
       transition:border-color .25s ease, background .25s ease, transform .2s ease;
     }
@@ -59,8 +60,7 @@
       width:28px; height:28px; flex-shrink:0; border-radius:50%;
       display:flex; align-items:center; justify-content:center;
       font-family:"Montserrat",sans-serif; font-size:11px; font-weight:800;
-      background:#E2E6EF; color:#7A8499;
-      transition:background .15s, color .15s;
+      background:#E2E6EF; color:#7A8499; transition:background .15s, color .15s;
     }
     .opt-btn.sel .opt-label { background:#1B3A6B; color:#fff; }
     .card { background:#fff; border-radius:20px; box-shadow:0 2px 20px rgba(0,0,0,.065); overflow:hidden; }
@@ -72,478 +72,771 @@
     }
     input[type=text]:focus { border-color:#1B3A6B; box-shadow:0 0 0 3px rgba(27,58,107,.12); }
     input[type=text]::placeholder { color:#B0B8C8; }
-    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar { width:5px; }
     ::-webkit-scrollbar-thumb { background:#C8CDD8; border-radius:99px; }
+    .host-table { width:100%; border-collapse:collapse; font-family:"Poppins",sans-serif; font-size:13px; }
+    .host-table th { background:#F8F9FC; padding:10px 16px; text-align:left; font-family:"Montserrat",sans-serif; font-size:10.5px; font-weight:700; color:#8A94A6; letter-spacing:.8px; text-transform:uppercase; border-bottom:1px solid #EAECF4; }
+    .host-table td { padding:12px 16px; border-bottom:1px solid #F3F4F8; color:#2D3748; vertical-align:middle; }
+    .host-table tr:last-child td { border-bottom:none; }
+    .host-table tr:hover td { background:#FAFBFD; }
+    .disc-pill { display:inline-block; padding:3px 10px; border-radius:20px; font-family:"Montserrat",sans-serif; font-size:11px; font-weight:800; }
+    .live-dot { width:8px; height:8px; border-radius:50%; background:#16A34A; display:inline-block; animation:pulse 1.5s ease-in-out infinite; }
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+<div id="root"></div>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAOC51iUwVqO-SFt9xmw331LDiemx-QIVU",
+    authDomain: "disc-mtf.firebaseapp.com",
+    databaseURL: "https://disc-mtf-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "disc-mtf",
+    storageBucket: "disc-mtf.firebasestorage.app",
+    messagingSenderId: "614622842891",
+    appId: "1:614622842891:web:d21d303bd28951b0f6f70e"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
+<script type="text/babel">
+  const { useState, useEffect, useRef, useMemo } = React;
 
-    // ─── BRAND ────────────────────────────────────────────────────────────
-    const NAVY = "#1B3A6B";
-    const GOLD = "#F5A623";
-    const MTF_LOGO = "https://raw.githubusercontent.com/darklurd/DISC-Assesment/ab9d629df6fdddc182c0f9ab2f8a622d7f77f690/logo%20mtf.png";
+  const MODE = new URLSearchParams(window.location.search).get("mode") || "play";
+  const NAVY = "#1B3A6B";
+  const GOLD = "#F5A623";
+  const MTF_LOGO = "https://raw.githubusercontent.com/darklurd/DISC-Assesment/ab9d629df6fdddc182c0f9ab2f8a622d7f77f690/logo%20mtf.png";
 
-    // ─── DISC CONFIG ──────────────────────────────────────────────────────
-    const DISC = {
-      D: { full: "Dominance",          color: "#C0392B", pale: "#FEF2F2", accent: "#F87171" },
-      I: { full: "Influence",          color: "#D97706", pale: "#FFFBEB", accent: "#FBBF24" },
-      S: { full: "Steadiness",         color: "#16A34A", pale: "#F0FDF4", accent: "#4ADE80" },
-      C: { full: "Conscientiousness",  color: "#1D4ED8", pale: "#EFF6FF", accent: "#60A5FA" },
-    };
-    const KEYS = ["D","I","S","C"];
-
-    const RESULT_IMAGES = { D: null, I: null, S: null, C: null };
-
-    // ─── 24 QUESTIONS ─────────────────────────────────────────────────────
-    const BASE_Q = [
-      ["Berpendirian teguh","Ceria dan mudah bergaul","Sabar menghadapi proses","Teliti dalam bekerja"],
-      ["Kompetitif","Antusias dan penuh semangat","Konsisten dan dapat diandalkan","Sistematis dan terorganisir"],
-      ["Tegas dalam bertindak","Ekspresif dan terbuka","Pendengar yang baik","Pemikir yang mendalam"],
-      ["Berani mengambil risiko","Suka bersosialisasi","Suka membantu orang lain","Suka menganalisis"],
-      ["Langsung ke inti pembicaraan","Senang bercerita dan berbagi","Tenang dalam segala situasi","Akurat dalam setiap detail"],
-      ["Mandiri dan tidak bergantung","Persuasif dan meyakinkan","Kooperatif dan suportif","Hati-hati sebelum bertindak"],
-      ["Ambisius","Inspiratif","Loyal","Perfeksionis"],
-      ["Fokus pada pencapaian","Fokus pada pengakuan","Fokus pada kestabilan","Fokus pada ketepatan"],
-      ["Percaya diri","Optimis","Tenang","Kritis"],
-      ["Tidak takut konfrontasi","Tidak takut tampil beda","Tidak suka perselisihan","Tidak suka ketidakpastian"],
-      ["Ingin menang","Ingin disukai","Ingin dihargai","Ingin benar"],
-      ["Menyukai kecepatan","Menyukai variasi","Menyukai rutinitas","Menyukai ketepatan"],
-      ["Dominan dalam diskusi","Energik dalam diskusi","Mediator dalam diskusi","Pengamat dalam diskusi"],
-      ["Menikmati kompetisi","Menikmati keramaian","Menikmati ketenangan","Menikmati ketelitian"],
-      ["Suka kebebasan","Suka kebersamaan","Suka keharmonisan","Suka keteraturan"],
-      ["Daya saing tinggi","Daya tarik tinggi","Daya tahan tinggi","Daya pikir tinggi"],
-      ["Tegas walau tidak populer","Ramah kepada siapa saja","Setia pada komitmen","Patuh pada aturan"],
-      ["Tipe pemimpin","Tipe penggerak","Tipe pendukung","Tipe perencana"],
-      ["Blak-blakan","Humoris","Penyabar","Pemikir"],
-      ["Mengutamakan efisiensi","Mengutamakan antusiasme","Mengutamakan kebersamaan","Mengutamakan keakuratan"],
-      ["Pemberani","Penyemangat","Penyeimbang","Penyempurna"],
-      ["Bertekad kuat","Bersemangat tinggi","Berhati lembut","Berpikir tajam"],
-      ["Melihat peluang di setiap tantangan","Melihat kesenangan di setiap aktivitas","Melihat kepentingan orang lain","Melihat potensi masalah sebelum terjadi"],
-      ["Lebih suka memimpin daripada mengikuti","Lebih suka berbicara daripada menulis","Lebih suka mendukung daripada menonjol","Lebih suka data daripada asumsi"],
-    ];
-
-    const SHUFFLED = BASE_Q.map((q, qi) => {
-      const items = q.map((v, i) => ({ v, k: KEYS[i], r: Math.sin((qi+1)*9301 + i*49297 + 233) }));
-      items.sort((a,b) => a.r - b.r);
-      return { opts: items.map(x=>x.v), map: items.map(x=>x.k) };
-    });
-
-    const STEPS = [
-      { label:"Membaca pola jawaban Anda", ms:1700 },
-      { label:"Mengidentifikasi kecenderungan kepribadian", ms:2000 },
-      { label:"Memetakan profil komunikasi DISC", ms:1800 },
-      { label:"Menganalisis kekuatan & potensi", ms:1900 },
-      { label:"Memfinalisasi laporan Anda", ms:1400 },
-    ];
-
-    function clamp(min, max) {
-      return Math.max(min, Math.min(max, window.innerWidth * 0.11));
+  const DISC = {
+    D: {
+      full:"Dominance", color:"#C0392B", pale:"#FEF2F2", accent:"#F87171",
+      tagline:"Langsung, tegas, dan berorientasi hasil.",
+      summary:"Tipe D berkomunikasi secara langsung dan to the point. Mereka menghargai efisiensi, tidak suka basa-basi, dan ingin segera sampai pada inti persoalan. Dalam diskusi, mereka cenderung mengambil kendali dan berbicara dengan penuh keyakinan. Untuk berkomunikasi efektif dengan tipe D, sampaikan ide Anda dengan singkat, fokus pada hasil, dan hindari penjelasan yang terlalu panjang."
+    },
+    I: {
+      full:"Influence", color:"#D97706", pale:"#FFFBEB", accent:"#FBBF24",
+      tagline:"Antusias, ekspresif, dan penuh energi sosial.",
+      summary:"Tipe I berkomunikasi dengan hangat, penuh semangat, dan mudah membangun kedekatan. Mereka senang bercerita, berbagi pengalaman, dan menciptakan suasana yang menyenangkan. Dalam diskusi, mereka menjadi penggerak energi kelompok. Untuk berkomunikasi efektif dengan tipe I, tunjukkan antusiasme, beri ruang untuk mereka berbicara, dan bangun hubungan personal sebelum masuk ke agenda."
+    },
+    S: {
+      full:"Steadiness", color:"#16A34A", pale:"#F0FDF4", accent:"#4ADE80",
+      tagline:"Pendengar setia, sabar, dan menjaga harmoni.",
+      summary:"Tipe S berkomunikasi dengan tenang, penuh empati, dan hati-hati. Mereka adalah pendengar aktif yang baik dan tidak terburu-buru dalam merespons. Dalam diskusi, mereka berperan sebagai penjaga keseimbangan dan mediator konflik. Untuk berkomunikasi efektif dengan tipe S, berikan waktu yang cukup, hindari tekanan mendadak, dan tunjukkan bahwa pendapat mereka dihargai."
+    },
+    C: {
+      full:"Conscientiousness", color:"#1D4ED8", pale:"#EFF6FF", accent:"#60A5FA",
+      tagline:"Analitis, terstruktur, dan berbasis data.",
+      summary:"Tipe C berkomunikasi dengan terstruktur, hati-hati, dan berbasis fakta. Mereka tidak mudah menyampaikan pendapat tanpa data yang kuat, dan cenderung mengajukan banyak pertanyaan klarifikasi. Dalam diskusi, mereka menjadi pemikir kritis yang memastikan kualitas keputusan. Untuk berkomunikasi efektif dengan tipe C, siapkan data dan logika yang kuat, beri waktu untuk mereka memproses, dan hindari keputusan yang terburu-buru."
     }
+  };
+  const KEYS = ["D","I","S","C"];
 
-    // ─── LOGO ─────────────────────────────────────────────────────────────
-    function Logo({ h = 48 }) {
-      return (
-        <img
-          src={MTF_LOGO}
-          alt="Mandiri Tunas Finance"
-          style={{ height: h, objectFit: "contain", display: "block" }}
-          crossOrigin="anonymous"
-        />
-      );
-    }
+  const BASE_Q = [
+    ["Berpendirian teguh","Ceria dan mudah bergaul","Sabar menghadapi proses","Teliti dalam bekerja"],
+    ["Kompetitif","Antusias dan penuh semangat","Konsisten dan dapat diandalkan","Sistematis dan terorganisir"],
+    ["Tegas dalam bertindak","Ekspresif dan terbuka","Pendengar yang baik","Pemikir yang mendalam"],
+    ["Berani mengambil risiko","Suka bersosialisasi","Suka membantu orang lain","Suka menganalisis"],
+    ["Langsung ke inti pembicaraan","Senang bercerita dan berbagi","Tenang dalam segala situasi","Akurat dalam setiap detail"],
+    ["Mandiri dan tidak bergantung","Persuasif dan meyakinkan","Kooperatif dan suportif","Hati-hati sebelum bertindak"],
+    ["Ambisius","Inspiratif","Loyal","Perfeksionis"],
+    ["Fokus pada pencapaian","Fokus pada pengakuan","Fokus pada kestabilan","Fokus pada ketepatan"],
+    ["Percaya diri","Optimis","Tenang","Kritis"],
+    ["Tidak takut konfrontasi","Tidak takut tampil beda","Tidak suka perselisihan","Tidak suka ketidakpastian"],
+    ["Ingin menang","Ingin disukai","Ingin dihargai","Ingin benar"],
+    ["Menyukai kecepatan","Menyukai variasi","Menyukai rutinitas","Menyukai ketepatan"],
+    ["Dominan dalam diskusi","Energik dalam diskusi","Mediator dalam diskusi","Pengamat dalam diskusi"],
+    ["Menikmati kompetisi","Menikmati keramaian","Menikmati ketenangan","Menikmati ketelitian"],
+    ["Suka kebebasan","Suka kebersamaan","Suka keharmonisan","Suka keteraturan"],
+    ["Daya saing tinggi","Daya tarik tinggi","Daya tahan tinggi","Daya pikir tinggi"],
+    ["Tegas walau tidak populer","Ramah kepada siapa saja","Setia pada komitmen","Patuh pada aturan"],
+    ["Tipe pemimpin","Tipe penggerak","Tipe pendukung","Tipe perencana"],
+    ["Blak-blakan","Humoris","Penyabar","Pemikir"],
+    ["Mengutamakan efisiensi","Mengutamakan antusiasme","Mengutamakan kebersamaan","Mengutamakan keakuratan"],
+    ["Pemberani","Penyemangat","Penyeimbang","Penyempurna"],
+    ["Bertekad kuat","Bersemangat tinggi","Berhati lembut","Berpikir tajam"],
+    ["Melihat peluang di setiap tantangan","Melihat kesenangan di setiap aktivitas","Melihat kepentingan orang lain","Melihat potensi masalah sebelum terjadi"],
+    ["Lebih suka memimpin daripada mengikuti","Lebih suka berbicara daripada menulis","Lebih suka mendukung daripada menonjol","Lebih suka data daripada asumsi"],
+  ];
+  const SHUFFLED = BASE_Q.map((q,qi)=>{
+    const items = q.map((v,i)=>({v,k:KEYS[i],r:Math.sin((qi+1)*9301+i*49297+233)}));
+    items.sort((a,b)=>a.r-b.r);
+    return { opts:items.map(x=>x.v), map:items.map(x=>x.k) };
+  });
+  const STEPS = [
+    {label:"Membaca pola jawaban Anda",ms:1700},
+    {label:"Mengidentifikasi kecenderungan kepribadian",ms:2000},
+    {label:"Memetakan profil komunikasi DISC",ms:1800},
+    {label:"Menganalisis kekuatan & potensi",ms:1900},
+    {label:"Memfinalisasi laporan Anda",ms:1400},
+  ];
 
-    function Footer() {
-      return (
-        <div style={{ borderTop:"1px solid #EEF0F5", padding:"16px 20px 18px", textAlign:"center" }}>
-          <div style={{ display:"flex", justifyContent:"center", marginBottom:8 }}>
-            <Logo h={28}/>
-          </div>
-          <div style={{ fontFamily:"Montserrat,sans-serif", fontSize:"clamp(10px,2vw,11.5px)", color:"#9AA3B2", letterSpacing:.3, lineHeight:1.7 }}>
-            Communication Style Assessment · HC Learning Division<br/>PT Mandiri Tunas Finance
-          </div>
+  function clamp(min,max){ return Math.max(min,Math.min(max,window.innerWidth*0.11)); }
+
+  // ── Logo ──────────────────────────────────────────────────────────────
+  function Logo({h=48,pill=false}){
+    const img = <img src={MTF_LOGO} alt="MTF" style={{height:h,objectFit:"contain",display:"block"}}/>;
+    if(!pill) return img;
+    return <div style={{background:"rgba(255,255,255,.92)",borderRadius:14,padding:"8px 16px",display:"inline-flex",alignItems:"center",justifyContent:"center"}}>{img}</div>;
+  }
+
+  function Footer(){
+    return (
+      <div style={{borderTop:"1px solid #EEF0F5",padding:"16px 20px 18px",textAlign:"center"}}>
+        <div style={{display:"flex",justifyContent:"center",marginBottom:8}}><Logo h={28}/></div>
+        <div style={{fontFamily:"Montserrat,sans-serif",fontSize:"clamp(10px,2vw,11.5px)",color:"#9AA3B2",letterSpacing:.3,lineHeight:1.7}}>
+          Communication Style Assessment · HC Learning Division<br/>PT Mandiri Tunas Finance
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
-    function ProgBar({ curr, total }) {
-      const pct = (curr/total)*100;
-      return (
-        <div style={{ marginBottom:"clamp(14px,3vw,20px)" }}>
-          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6, fontFamily:"Montserrat,sans-serif", fontSize:"clamp(11px,2.2vw,12.5px)", fontWeight:600, color:"#8A94A6" }}>
-            <span>Pertanyaan {curr} / {total}</span>
-            <span style={{ color:NAVY, fontWeight:700 }}>{Math.round(pct)}%</span>
-          </div>
-          <div style={{ height:7, background:"#E2E6EF", borderRadius:99, overflow:"hidden" }}>
-            <div style={{ width:`${pct}%`, height:"100%", borderRadius:99, background:`linear-gradient(90deg,${NAVY},${GOLD})`, transition:"width .5s cubic-bezier(.4,0,.2,1)" }}/>
-          </div>
+  function ProgBar({curr,total}){
+    const pct=(curr/total)*100;
+    return (
+      <div style={{marginBottom:"clamp(14px,3vw,20px)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:6,fontFamily:"Montserrat,sans-serif",fontSize:"clamp(11px,2.2vw,12.5px)",fontWeight:600,color:"#8A94A6"}}>
+          <span>Pertanyaan {curr} / {total}</span>
+          <span style={{color:NAVY,fontWeight:700}}>{Math.round(pct)}%</span>
         </div>
-      );
-    }
+        <div style={{height:7,background:"#E2E6EF",borderRadius:99,overflow:"hidden"}}>
+          <div style={{width:`${pct}%`,height:"100%",borderRadius:99,background:`linear-gradient(90deg,${NAVY},${GOLD})`,transition:"width .5s cubic-bezier(.4,0,.2,1)"}}/>
+        </div>
+      </div>
+    );
+  }
 
-    // ─── LANDING ──────────────────────────────────────────────────────────
-    function Landing({ onStart }) {
-      const [name, setName] = useState("");
-      const [branch, setBranch] = useState("");
-      const [vis, setVis] = useState(false);
-      useEffect(()=>{ setTimeout(()=>setVis(true),60); },[]);
-      const ok = name.trim() && branch.trim();
-
-      const discBadges = [
-        { k:"D", angle:-8,  top:"8%",  left:"3%"  },
-        { k:"I", angle: 6,  top:"5%",  right:"3%" },
-        { k:"S", angle:-5,  bottom:"8%", left:"4%"},
-        { k:"C", angle:7,   bottom:"6%", right:"2%" },
-      ];
-
-      return (
-        <div style={{ minHeight:"100vh", background:"#F2F4F8", display:"flex", alignItems:"center", justifyContent:"center", padding:"clamp(12px,4vw,24px)", fontFamily:"Poppins,sans-serif" }}>
-          <div style={{ width:"100%", maxWidth:520, opacity:vis?1:0, transform:vis?"none":"translateY(22px)", transition:"all 1.1s cubic-bezier(.22,1,.36,1)" }}>
-
-            <div style={{ position:"relative", background:`linear-gradient(145deg,${NAVY} 0%,#16305D 40%,#0F2348 100%)`, borderRadius:24, overflow:"hidden", padding:"clamp(28px,6vw,48px) clamp(24px,5vw,40px) clamp(24px,5vw,36px)", marginBottom:16, boxShadow:"0 12px 48px rgba(27,58,107,.32)" }}>
-              <div style={{ position:"absolute", top:-60, right:-60, width:200, height:200, borderRadius:"50%", background:"rgba(245,166,35,.08)", pointerEvents:"none" }}/>
-              <div style={{ position:"absolute", bottom:-80, left:-40, width:220, height:220, borderRadius:"50%", background:"rgba(255,255,255,.03)", pointerEvents:"none" }}/>
-
-              {discBadges.map(({k,angle,...pos})=>(
-                <div key={k} style={{
-                  position:"absolute", ...pos,
-                  background:"rgba(255,255,255,.07)", backdropFilter:"blur(4px)",
-                  border:"1px solid rgba(255,255,255,.12)", borderRadius:12, padding:"8px 12px",
-                  transform:`rotate(${angle}deg)`,
-                  animation:`float ${3.2 + KEYS.indexOf(k)*0.4}s ease-in-out infinite`,
-                  animationDelay:`${KEYS.indexOf(k)*0.3}s`,
-                }}>
-                  <div style={{ fontFamily:"Montserrat,sans-serif", fontWeight:900, fontSize:"clamp(18px,4vw,24px)", color:DISC[k].accent, lineHeight:1 }}>{k}</div>
-                  <div style={{ fontFamily:"Montserrat,sans-serif", fontWeight:600, fontSize:"clamp(7px,1.5vw,9px)", color:"rgba(255,255,255,.6)", marginTop:2, maxWidth:70, lineHeight:1.2 }}>{DISC[k].full}</div>
-                </div>
-              ))}
-
-              <div style={{ position:"relative", textAlign:"center" }}>
-                <div style={{ display:"flex", justifyContent:"center", marginBottom:"clamp(16px,4vw,22px)" }}>
-                  <div style={{ background:"rgba(255,255,255,.92)", borderRadius:14, padding:"10px 18px", display:"inline-flex", alignItems:"center", justifyContent:"center" }}>
-                    <Logo h={clamp(38,52)}/>
-                  </div>
-                </div>
-                <div style={{ display:"inline-block", background:"rgba(245,166,35,.15)", border:"1px solid rgba(245,166,35,.3)", borderRadius:20, padding:"4px 14px", marginBottom:"clamp(10px,2.5vw,14px)" }}>
-                  <span style={{ fontFamily:"Montserrat,sans-serif", fontSize:"clamp(9px,2vw,11px)", fontWeight:700, letterSpacing:2.5, textTransform:"uppercase", color:GOLD }}>HC Learning Division</span>
-                </div>
-                <h1 style={{ fontFamily:"Montserrat,sans-serif", fontWeight:900, fontSize:"clamp(22px,5.5vw,36px)", lineHeight:1.15, color:"#fff", letterSpacing:"-0.5px", marginBottom:"clamp(8px,2vw,12px)" }}>
-                  Communication<br/>
-                  <span style={{ color:GOLD, fontStyle:"italic" }}>Style</span> Assessment
-                </h1>
-                <p style={{ fontSize:"clamp(12px,2.5vw,14px)", color:"rgba(255,255,255,.6)", margin:0 }}>24 pernyataan · ±8 menit</p>
+  // ── Landing ───────────────────────────────────────────────────────────
+  function Landing({onStart}){
+    const [name,setName]=useState("");
+    const [branch,setBranch]=useState("");
+    const [vis,setVis]=useState(false);
+    useEffect(()=>{setTimeout(()=>setVis(true),60);},[]);
+    const ok=name.trim()&&branch.trim();
+    const badges=[{k:"D",angle:-8,top:"8%",left:"3%"},{k:"I",angle:6,top:"5%",right:"3%"},{k:"S",angle:-5,bottom:"8%",left:"4%"},{k:"C",angle:7,bottom:"6%",right:"2%"}];
+    return (
+      <div style={{minHeight:"100vh",background:"#F2F4F8",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(12px,4vw,24px)",fontFamily:"Poppins,sans-serif"}}>
+        <div style={{width:"100%",maxWidth:520,opacity:vis?1:0,transform:vis?"none":"translateY(22px)",transition:"all 1.1s cubic-bezier(.22,1,.36,1)"}}>
+          <div style={{position:"relative",background:`linear-gradient(145deg,${NAVY} 0%,#16305D 40%,#0F2348 100%)`,borderRadius:24,overflow:"hidden",padding:"clamp(28px,6vw,48px) clamp(24px,5vw,40px) clamp(24px,5vw,36px)",marginBottom:16,boxShadow:"0 12px 48px rgba(27,58,107,.32)"}}>
+            <div style={{position:"absolute",top:-60,right:-60,width:200,height:200,borderRadius:"50%",background:"rgba(245,166,35,.08)",pointerEvents:"none"}}/>
+            <div style={{position:"absolute",bottom:-80,left:-40,width:220,height:220,borderRadius:"50%",background:"rgba(255,255,255,.03)",pointerEvents:"none"}}/>
+            {badges.map(({k,angle,...pos})=>(
+              <div key={k} style={{position:"absolute",...pos,background:"rgba(255,255,255,.07)",backdropFilter:"blur(4px)",border:"1px solid rgba(255,255,255,.12)",borderRadius:12,padding:"8px 12px",transform:`rotate(${angle}deg)`,animation:`float ${3.2+KEYS.indexOf(k)*0.4}s ease-in-out infinite`,animationDelay:`${KEYS.indexOf(k)*0.3}s`}}>
+                <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:900,fontSize:"clamp(18px,4vw,24px)",color:DISC[k].accent,lineHeight:1}}>{k}</div>
+                <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:600,fontSize:"clamp(7px,1.5vw,9px)",color:"rgba(255,255,255,.6)",marginTop:2,maxWidth:70,lineHeight:1.2}}>{DISC[k].full}</div>
               </div>
+            ))}
+            <div style={{position:"relative",textAlign:"center"}}>
+              <div style={{display:"flex",justifyContent:"center",marginBottom:"clamp(16px,4vw,22px)"}}>
+                <Logo h={clamp(38,52)} pill={true}/>
+              </div>
+              <div style={{display:"inline-block",background:"rgba(245,166,35,.15)",border:"1px solid rgba(245,166,35,.3)",borderRadius:20,padding:"4px 14px",marginBottom:"clamp(10px,2.5vw,14px)"}}>
+                <span style={{fontFamily:"Montserrat,sans-serif",fontSize:"clamp(9px,2vw,11px)",fontWeight:700,letterSpacing:2.5,textTransform:"uppercase",color:GOLD}}>HC Learning Division</span>
+              </div>
+              <h1 style={{fontFamily:"Montserrat,sans-serif",fontWeight:900,fontSize:"clamp(22px,5.5vw,36px)",lineHeight:1.15,color:"#fff",letterSpacing:"-0.5px",marginBottom:"clamp(8px,2vw,12px)"}}>
+                Communication<br/><span style={{color:GOLD,fontStyle:"italic"}}>Style</span> Assessment
+              </h1>
+              <p style={{fontSize:"clamp(12px,2.5vw,14px)",color:"rgba(255,255,255,.6)",margin:0}}>24 pernyataan · ±8 menit</p>
             </div>
+          </div>
+          <div className="card" style={{padding:"clamp(20px,5vw,32px)"}}>
+            <p style={{fontSize:"clamp(12.5px,2.5vw,14px)",color:"#5A6178",lineHeight:1.75,textAlign:"center",marginBottom:"clamp(16px,4vw,22px)"}}>
+              Pilih pernyataan yang <strong style={{color:NAVY}}>paling menggambarkan diri Anda</strong>.<br/>Jawablah sejujurnya sesuai kondisi saat ini.
+            </p>
+            {[["Nama Lengkap","Masukkan nama lengkap Anda",name,setName],["Cabang","Masukkan nama cabang Anda",branch,setBranch]].map(([lbl,ph,val,set])=>(
+              <div key={lbl} style={{marginBottom:"clamp(10px,2.5vw,14px)"}}>
+                <label style={{display:"block",fontFamily:"Montserrat,sans-serif",fontSize:"clamp(10px,2vw,11.5px)",fontWeight:700,color:"#5A6178",letterSpacing:.6,textTransform:"uppercase",marginBottom:6}}>{lbl}</label>
+                <input type="text" value={val} placeholder={ph} onChange={e=>set(e.target.value)}/>
+              </div>
+            ))}
+            <button className="btn-primary" style={{marginTop:"clamp(6px,2vw,10px)"}} disabled={!ok} onClick={()=>ok&&onStart(name.trim(),branch.trim())}>
+              Mulai Assessment →
+            </button>
+          </div>
+          <Footer/>
+        </div>
+      </div>
+    );
+  }
 
-            <div className="card" style={{ padding:"clamp(20px,5vw,32px)" }}>
-              <p style={{ fontSize:"clamp(12.5px,2.5vw,14px)", color:"#5A6178", lineHeight:1.75, textAlign:"center", marginBottom:"clamp(16px,4vw,22px)" }}>
-                Pilih pernyataan yang <strong style={{ color:NAVY }}>paling menggambarkan diri Anda</strong>.<br/>Jawablah sejujurnya sesuai kondisi saat ini.
-              </p>
-              {[["Nama Lengkap","Masukkan nama lengkap Anda",name,setName],
-                ["Cabang","Masukkan nama cabang Anda",branch,setBranch]].map(([lbl,ph,val,set])=>(
-                <div key={lbl} style={{ marginBottom:"clamp(10px,2.5vw,14px)" }}>
-                  <label style={{ display:"block", fontFamily:"Montserrat,sans-serif", fontSize:"clamp(10px,2vw,11.5px)", fontWeight:700, color:"#5A6178", letterSpacing:.6, textTransform:"uppercase", marginBottom:6 }}>{lbl}</label>
-                  <input type="text" value={val} placeholder={ph} onChange={e=>set(e.target.value)}/>
-                </div>
-              ))}
-              <button className="btn-primary" style={{ marginTop:"clamp(6px,2vw,10px)" }} disabled={!ok} onClick={()=>ok&&onStart(name.trim(),branch.trim())}>
-                Mulai Assessment →
+  // ── Question ──────────────────────────────────────────────────────────
+  function QuestionPage({qi,answers,onAnswer,onBack,onNext}){
+    const [phase,setPhase]=useState("idle");
+    const [direction,setDir]=useState("fwd");
+    const [displayQi,setDisplayQi]=useState(qi);
+    const prevRef=useRef(qi);
+    useEffect(()=>{
+      const prev=prevRef.current;
+      if(prev===qi) return;
+      setDir(qi>prev?"fwd":"bwd");
+      prevRef.current=qi;
+      setPhase("exit");
+      const t=setTimeout(()=>{setDisplayQi(qi);setPhase("enter");},230);
+      return ()=>clearTimeout(t);
+    },[qi]);
+    const animClass=phase==="exit"?(direction==="fwd"?"slide-out-fwd":"slide-out-bwd"):phase==="enter"?(direction==="fwd"?"slide-in-fwd":"slide-in-bwd"):"";
+    const dq=SHUFFLED[displayQi];
+    const dSel=answers[displayQi]!==undefined?answers[displayQi]:null;
+    return (
+      <div style={{minHeight:"100vh",background:"#F2F4F8",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(12px,4vw,24px)",fontFamily:"Poppins,sans-serif"}}>
+        <div style={{width:"100%",maxWidth:520}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"clamp(12px,3vw,18px)"}}>
+            <Logo h={clamp(26,34)}/>
+            <span style={{fontFamily:"Montserrat,sans-serif",fontSize:"clamp(10px,2vw,12px)",fontWeight:600,color:"#9AA3B2",letterSpacing:.5}}>DISC Assessment</span>
+          </div>
+          <ProgBar curr={qi+1} total={24}/>
+          <div key={displayQi} className={`card ${animClass}`} style={{padding:"clamp(20px,5vw,32px)",willChange:"transform,opacity"}}>
+            <div style={{textAlign:"center",marginBottom:"clamp(18px,4vw,26px)"}}>
+              <div style={{display:"inline-block",background:NAVY,color:"#fff",fontFamily:"Montserrat,sans-serif",fontSize:"clamp(9px,2vw,11px)",fontWeight:700,letterSpacing:1.8,textTransform:"uppercase",padding:"3px 14px",borderRadius:20,marginBottom:"clamp(10px,2.5vw,14px)"}}>
+                {displayQi+1} / 24
+              </div>
+              <h2 style={{fontFamily:"Montserrat,sans-serif",fontWeight:800,fontSize:"clamp(15px,3.5vw,19px)",color:NAVY,lineHeight:1.38}}>
+                Yang paling menggambarkan<br/>diri saya...
+              </h2>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:"clamp(7px,1.8vw,10px)"}}>
+              {dq.opts.map((opt,idx)=>{
+                const isSel=dSel===idx;
+                return (
+                  <button key={idx} className={`opt-btn${isSel?" sel":""}`} onClick={()=>onAnswer(displayQi,idx)}>
+                    <span className="opt-label">{isSel?"✓":String.fromCharCode(65+idx)}</span>{opt}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{display:"flex",gap:"clamp(7px,2vw,10px)",marginTop:"clamp(16px,4vw,22px)"}}>
+              {displayQi>0&&<button className="btn-ghost" style={{flex:1}} onClick={onBack}>← Kembali</button>}
+              <button className="btn-primary" style={{flex:displayQi>0?2:1,opacity:dSel!==null?1:.45}} disabled={dSel===null} onClick={()=>dSel!==null&&onNext()}>
+                {displayQi===23?"Lihat Hasil →":"Lanjut →"}
               </button>
             </div>
-            <Footer/>
           </div>
+          <Footer/>
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
-    // ─── QUESTION PAGE ────────────────────────────────────────────────────
-    function QuestionPage({ qi, answers, onAnswer, onBack, onNext }) {
-      const [phase, setPhase]         = useState("idle");
-      const [direction, setDir]       = useState("fwd");
-      const [displayQi, setDisplayQi] = useState(qi);
-      const prevQiRef = useRef(qi);
-
-      useEffect(()=>{
-        const prev = prevQiRef.current;
-        if (prev === qi) return;
-        const dir = qi > prev ? "fwd" : "bwd";
-        setDir(dir);
-        prevQiRef.current = qi;
-        setPhase("exit");
-        const t1 = setTimeout(()=>{ setDisplayQi(qi); setPhase("enter"); }, 230);
-        return ()=>clearTimeout(t1);
-      },[qi]);
-
-      const animClass =
-        phase === "exit"  ? (direction === "fwd" ? "slide-out-fwd" : "slide-out-bwd")
-      : phase === "enter" ? (direction === "fwd" ? "slide-in-fwd"  : "slide-in-bwd")
-      : "";
-
-      const dq   = SHUFFLED[displayQi];
-      const dSel = answers[displayQi] !== undefined ? answers[displayQi] : null;
-
-      return (
-        <div style={{ minHeight:"100vh", background:"#F2F4F8", display:"flex", alignItems:"center", justifyContent:"center", padding:"clamp(12px,4vw,24px)", fontFamily:"Poppins,sans-serif" }}>
-          <div style={{ width:"100%", maxWidth:520 }}>
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"clamp(12px,3vw,18px)" }}>
-              <Logo h={clamp(26,34)}/>
-              <span style={{ fontFamily:"Montserrat,sans-serif", fontSize:"clamp(10px,2vw,12px)", fontWeight:600, color:"#9AA3B2", letterSpacing:.5 }}>DISC Assessment</span>
-            </div>
-            <ProgBar curr={qi+1} total={24}/>
-            <div key={displayQi} className={`card ${animClass}`} style={{ padding:"clamp(20px,5vw,32px)", willChange:"transform, opacity" }}>
-              <div style={{ textAlign:"center", marginBottom:"clamp(18px,4vw,26px)" }}>
-                <div style={{ display:"inline-block", background:NAVY, color:"#fff", fontFamily:"Montserrat,sans-serif", fontSize:"clamp(9px,2vw,11px)", fontWeight:700, letterSpacing:1.8, textTransform:"uppercase", padding:"3px 14px", borderRadius:20, marginBottom:"clamp(10px,2.5vw,14px)" }}>
-                  {displayQi+1} / 24
-                </div>
-                <h2 style={{ fontFamily:"Montserrat,sans-serif", fontWeight:800, fontSize:"clamp(15px,3.5vw,19px)", color:NAVY, lineHeight:1.38 }}>
-                  Yang paling menggambarkan<br/>diri saya...
-                </h2>
-              </div>
-              <div style={{ display:"flex", flexDirection:"column", gap:"clamp(7px,1.8vw,10px)" }}>
-                {dq.opts.map((opt,idx)=>{
-                  const isSel = dSel===idx;
-                  return (
-                    <button key={idx} className={`opt-btn${isSel?" sel":""}`} onClick={()=>onAnswer(displayQi,idx)}>
-                      <span className="opt-label">{isSel ? "✓" : String.fromCharCode(65+idx)}</span>
-                      {opt}
-                    </button>
-                  );
-                })}
-              </div>
-              <div style={{ display:"flex", gap:"clamp(7px,2vw,10px)", marginTop:"clamp(16px,4vw,22px)" }}>
-                {displayQi>0 && <button className="btn-ghost" style={{ flex:1 }} onClick={onBack}>← Kembali</button>}
-                <button className="btn-primary" style={{ flex:displayQi>0?2:1, opacity:dSel!==null?1:.45 }} disabled={dSel===null} onClick={()=>dSel!==null&&onNext()}>
-                  {displayQi===23?"Lihat Hasil →":"Lanjut →"}
-                </button>
-              </div>
-            </div>
-            <Footer/>
-          </div>
-        </div>
-      );
-    }
-
-    // ─── PROCESSING ───────────────────────────────────────────────────────
-    function Processing({ name, onDone }) {
-      const [si, setSi]     = useState(0);
-      const [spct, setSpct] = useState(0);
-      const [total, setTotal] = useState(0);
-      const [done, setDone]   = useState(false);
-      const totalMs = STEPS.reduce((s,x)=>s+x.ms,0);
-
-      useEffect(()=>{
-        let elapsed=0;
-        const run=(i)=>{
-          if(i>=STEPS.length){ setDone(true); setTimeout(onDone,700); return; }
-          setSi(i); setSpct(0);
-          const dur=STEPS[i].ms; let t=0;
-          const iv=setInterval(()=>{
-            t+=30; elapsed+=30;
-            setSpct(Math.min((t/dur)*100,100));
-            setTotal(Math.min((elapsed/totalMs)*100,99));
-            if(t>=dur){ clearInterval(iv); run(i+1); }
-          },30);
-        };
-        run(0);
-      },[]);
-
-      const r=44, circ=2*Math.PI*r, offset=circ-((done?100:total)/100)*circ;
-      return (
-        <div style={{ minHeight:"100vh", background:"#F2F4F8", display:"flex", alignItems:"center", justifyContent:"center", padding:"clamp(12px,4vw,24px)", fontFamily:"Poppins,sans-serif" }}>
-          <div className="card" style={{ width:"100%", maxWidth:420 }}>
-            <div style={{ background:`linear-gradient(145deg,${NAVY},#2A5298)`, padding:"clamp(24px,5vw,36px) clamp(20px,4vw,28px)", textAlign:"center", color:"#fff" }}>
-              <div style={{ display:"flex", justifyContent:"center", marginBottom:16 }}>
-                <Logo h={clamp(36,48)}/>
-              </div>
-              <div style={{ fontFamily:"Montserrat,sans-serif", fontWeight:700, fontSize:"clamp(14px,3vw,17px)", marginBottom:4 }}>Menganalisis Profil Anda</div>
-              <div style={{ fontSize:"clamp(12px,2.5vw,13.5px)", opacity:.7 }}>Halo, {name} 👋</div>
-            </div>
-            <div style={{ padding:"clamp(24px,5vw,32px)" }}>
-              <div style={{ display:"flex", justifyContent:"center", marginBottom:"clamp(20px,4vw,28px)" }}>
-                <svg width={120} height={120} viewBox="0 0 108 108">
-                  <circle cx="54" cy="54" r={r} fill="none" stroke="#E2E6EF" strokeWidth="9"/>
-                  <circle cx="54" cy="54" r={r} fill="none" stroke={GOLD} strokeWidth="9" strokeLinecap="round"
-                    strokeDasharray={circ} strokeDashoffset={offset} transform="rotate(-90 54 54)"
-                    style={{ transition:"stroke-dashoffset .9s cubic-bezier(.4,0,.2,1)" }}/>
-                  <text x="54" y="60" textAnchor="middle" fill={NAVY} fontSize="18" fontWeight="900" fontFamily="Montserrat,sans-serif">
-                    {done?"✓":`${Math.round(total)}%`}
-                  </text>
-                </svg>
-              </div>
-              <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:18 }}>
-                {STEPS.map((step,i)=>{
-                  const isActive=i===si&&!done, isDone=i<si||done;
-                  return (
-                    <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"clamp(8px,2vw,11px) clamp(10px,2.5vw,14px)", borderRadius:12, background:isDone?"#F0FDF4":isActive?"#EFF6FF":"#F7F8FC", border:`1px solid ${isDone?"#BBF7D0":isActive?"#BFDBFE":"#E8ECF3"}`, transition:"all .3s" }}>
-                      <div style={{ width:24, height:24, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", background:isDone?"#16A34A":isActive?NAVY:"#E2E6EF", color:isDone||isActive?"#fff":"#9AA3B2", fontSize:"clamp(10px,2vw,11.5px)", fontWeight:800, fontFamily:"Montserrat,sans-serif", transition:"all .3s" }}>
-                        {isDone?"✓":i+1}
-                      </div>
-                      <div style={{ flex:1 }}>
-                        <div style={{ fontFamily:"Montserrat,sans-serif", fontSize:"clamp(11px,2.2vw,12.5px)", fontWeight:600, color:isDone?"#16A34A":isActive?NAVY:"#9AA3B2" }}>{step.label}</div>
-                        {isActive&&(
-                          <div style={{ marginTop:4, height:3, background:"#E2E6EF", borderRadius:99, overflow:"hidden" }}>
-                            <div style={{ width:`${spct}%`, height:"100%", background:GOLD, borderRadius:99, transition:"width .08s linear" }}/>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div style={{ textAlign:"center", fontSize:"clamp(11px,2.2vw,12.5px)", color:"#9AA3B2", fontStyle:"italic" }}>
-                {done?"✅ Analisis selesai!":"Mohon tunggu sebentar..."}
-              </div>
-            </div>
-            <Footer/>
-          </div>
-        </div>
-      );
-    }
-
-    // ─── RESULTS ──────────────────────────────────────────────────────────
-    function ScoreBar({ k, score }) {
-      const [w, setW] = useState(0);
-      const pct = Math.round((score/24)*100);
-      useEffect(()=>{ const t=setTimeout(()=>setW(pct),300); return ()=>clearTimeout(t); },[]);
-      const d=DISC[k];
-      return (
-        <div style={{ marginBottom:"clamp(12px,2.8vw,16px)" }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-              <span style={{ fontFamily:"Montserrat,sans-serif", fontWeight:900, fontSize:"clamp(15px,3.5vw,18px)", color:d.color, width:20 }}>{k}</span>
-              <span style={{ fontFamily:"Poppins,sans-serif", fontSize:"clamp(12px,2.5vw,13.5px)", color:"#5A6178", fontWeight:500 }}>{d.full}</span>
-            </div>
-            <div>
-              <span style={{ fontFamily:"Montserrat,sans-serif", fontWeight:700, fontSize:"clamp(13px,2.8vw,15px)", color:d.color }}>{score}</span>
-              <span style={{ fontFamily:"Montserrat,sans-serif", fontSize:"clamp(10px,2vw,11.5px)", color:"#B0B8C8" }}> / 24</span>
-            </div>
-          </div>
-          <div style={{ height:"clamp(8px,1.8vw,11px)", background:"#F0F2F7", borderRadius:99, overflow:"hidden" }}>
-            <div style={{ width:`${w}%`, height:"100%", background:d.color, borderRadius:99, transition:"width 1.4s cubic-bezier(.4,0,.2,1)", boxShadow:`0 0 8px ${d.color}55` }}/>
-          </div>
-        </div>
-      );
-    }
-
-    function ResultImage({ k }) {
-      const img = RESULT_IMAGES[k];
-      const d = DISC[k];
-      if (img) return (
-        <div style={{ width:"100%", borderRadius:16, overflow:"hidden", marginBottom:4 }}>
-          <img src={img} alt={d.full} style={{ width:"100%", display:"block", objectFit:"cover" }}/>
-        </div>
-      );
-      return (
-        <div style={{ width:"100%", aspectRatio:"4/3", borderRadius:16, background:`linear-gradient(135deg,${d.pale},${d.color}18)`, border:`2px dashed ${d.color}44`, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"clamp(8px,2vw,12px)", padding:"clamp(16px,4vw,24px)", marginBottom:4 }}>
-          <div style={{ width:"clamp(48px,10vw,64px)", height:"clamp(48px,10vw,64px)", borderRadius:"50%", background:d.color, display:"flex", alignItems:"center", justifyContent:"center" }}>
-            <span style={{ fontFamily:"Montserrat,sans-serif", fontWeight:900, fontSize:"clamp(22px,5vw,30px)", color:"#fff" }}>{k}</span>
-          </div>
-          <div style={{ textAlign:"center" }}>
-            <div style={{ fontFamily:"Montserrat,sans-serif", fontWeight:700, fontSize:"clamp(13px,3vw,15px)", color:d.color, marginBottom:4 }}>{d.full}</div>
-          </div>
-        </div>
-      );
-    }
-
-    function Results({ name, branch, scores, onRestart }) {
-      const [vis, setVis] = useState(false);
-      useEffect(()=>{ setTimeout(()=>setVis(true),80); },[]);
-      const sorted = KEYS.map(k=>({k,s:scores[k]})).sort((a,b)=>b.s-a.s);
-      const dom=sorted[0].k, sec=sorted[1].k, d=DISC[dom];
-
-      const share=async()=>{
-        const txt=`Hasil DISC Assessment:\n👤 ${name} | Cabang ${branch}\n🎯 Tipe Dominan: ${d.full} (${dom})\n📊 D:${scores.D}  I:${scores.I}  S:${scores.S}  C:${scores.C}\n\nCommunication Style Assessment · HC Learning Division · PT Mandiri Tunas Finance`;
-        if(navigator.share){ try{ await navigator.share({title:"DISC Result",text:txt}); }catch{} }
-        else { try{ await navigator.clipboard.writeText(txt); alert("Hasil disalin ke clipboard!"); }catch{ alert("Silakan screenshot halaman ini."); } }
+  // ── Processing ────────────────────────────────────────────────────────
+  function Processing({name,onDone}){
+    const [si,setSi]=useState(0);
+    const [spct,setSpct]=useState(0);
+    const [total,setTotal]=useState(0);
+    const [done,setDone]=useState(false);
+    const totalMs=STEPS.reduce((s,x)=>s+x.ms,0);
+    useEffect(()=>{
+      let elapsed=0;
+      const run=(i)=>{
+        if(i>=STEPS.length){setDone(true);setTimeout(onDone,700);return;}
+        setSi(i);setSpct(0);
+        const dur=STEPS[i].ms;let t=0;
+        const iv=setInterval(()=>{
+          t+=30;elapsed+=30;
+          setSpct(Math.min((t/dur)*100,100));
+          setTotal(Math.min((elapsed/totalMs)*100,99));
+          if(t>=dur){clearInterval(iv);run(i+1);}
+        },30);
       };
-      const screenshot=()=>alert("Cara menyimpan:\n• Android: Power + Vol Down\n• iPhone: Side + Home / Side + Vol Up\n• Desktop: Print Screen / Snipping Tool\n\nAtau tekan Bagikan untuk salin teks.");
-
-      const a=(delay)=>({ opacity:vis?1:0, transform:vis?"none":"translateY(16px)", transition:`all .8s cubic-bezier(.22,1,.36,1) ${delay}s` });
-
-      return (
-        <div style={{ minHeight:"100vh", background:"#F2F4F8", padding:"clamp(12px,4vw,24px) clamp(12px,4vw,20px) 40px", fontFamily:"Poppins,sans-serif" }}>
-          <div style={{ maxWidth:560, margin:"0 auto" }}>
-            <div style={{ ...a(0), background:`linear-gradient(145deg,${NAVY},#2A5298)`, borderRadius:22, padding:"clamp(24px,5vw,36px) clamp(20px,4vw,28px)", textAlign:"center", color:"#fff", marginBottom:14, boxShadow:"0 8px 32px rgba(27,58,107,.28)" }}>
-              <div style={{ display:"flex", justifyContent:"center", marginBottom:14 }}>
-                <Logo h={clamp(38,50)}/>
-              </div>
-              <div style={{ fontFamily:"Montserrat,sans-serif", fontSize:"clamp(9px,2vw,10.5px)", fontWeight:700, letterSpacing:2.5, textTransform:"uppercase", opacity:.65, marginBottom:4 }}>Hasil Assessment</div>
-              <h1 style={{ fontFamily:"Montserrat,sans-serif", fontSize:"clamp(18px,4.5vw,23px)", fontWeight:900, margin:"6px 0 3px" }}>{name}</h1>
-              <p style={{ fontSize:"clamp(12px,2.5vw,13.5px)", opacity:.65, margin:0 }}>Cabang {branch}</p>
+      run(0);
+    },[]);
+    const r=44,circ=2*Math.PI*r,offset=circ-((done?100:total)/100)*circ;
+    return (
+      <div style={{minHeight:"100vh",background:"#F2F4F8",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(12px,4vw,24px)",fontFamily:"Poppins,sans-serif"}}>
+        <div className="card" style={{width:"100%",maxWidth:420}}>
+          <div style={{background:`linear-gradient(145deg,${NAVY},#2A5298)`,padding:"clamp(24px,5vw,36px) clamp(20px,4vw,28px)",textAlign:"center",color:"#fff"}}>
+            <div style={{display:"flex",justifyContent:"center",marginBottom:16}}><Logo h={clamp(36,48)} pill={true}/></div>
+            <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:700,fontSize:"clamp(14px,3vw,17px)",marginBottom:4}}>Menganalisis Profil Anda</div>
+            <div style={{fontSize:"clamp(12px,2.5vw,13.5px)",opacity:.7}}>Halo, {name} 👋</div>
+          </div>
+          <div style={{padding:"clamp(24px,5vw,32px)"}}>
+            <div style={{display:"flex",justifyContent:"center",marginBottom:"clamp(20px,4vw,28px)"}}>
+              <svg width={120} height={120} viewBox="0 0 108 108">
+                <circle cx="54" cy="54" r={r} fill="none" stroke="#E2E6EF" strokeWidth="9"/>
+                <circle cx="54" cy="54" r={r} fill="none" stroke={GOLD} strokeWidth="9" strokeLinecap="round"
+                  strokeDasharray={circ} strokeDashoffset={offset} transform="rotate(-90 54 54)"
+                  style={{transition:"stroke-dashoffset .9s cubic-bezier(.4,0,.2,1)"}}/>
+                <text x="54" y="60" textAnchor="middle" fill={NAVY} fontSize="18" fontWeight="900" fontFamily="Montserrat,sans-serif">
+                  {done?"✓":`${Math.round(total)}%`}
+                </text>
+              </svg>
             </div>
-
-            <div style={{ ...a(.08), background:"#fff", borderRadius:22, padding:"clamp(22px,5vw,32px)", marginBottom:14, borderTop:`5px solid ${d.color}`, boxShadow:"0 2px 18px rgba(0,0,0,.06)", textAlign:"center" }}>
-              <div style={{ fontFamily:"Montserrat,sans-serif", fontSize:"clamp(9px,2vw,10.5px)", fontWeight:700, color:"#9AA3B2", letterSpacing:2, textTransform:"uppercase", marginBottom:12 }}>Tipe Komunikasi Dominan</div>
-              <ResultImage k={dom}/>
-              <div style={{ fontFamily:"Montserrat,sans-serif", fontSize:"clamp(20px,5vw,26px)", fontWeight:900, color:d.color, marginBottom:4 }}>{d.full}</div>
-              <div style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"5px 14px", background:DISC[sec].pale, borderRadius:20, fontFamily:"Montserrat,sans-serif" }}>
-                <span style={{ fontSize:"clamp(10.5px,2.2vw,12px)", color:"#5A6178" }}>Tipe sekunder:</span>
-                <span style={{ fontSize:"clamp(10.5px,2.2vw,12px)", fontWeight:700, color:DISC[sec].color }}>{DISC[sec].full} ({sec})</span>
-              </div>
-            </div>
-
-            <div style={{ ...a(.14), background:"#fff", borderRadius:22, padding:"clamp(18px,4vw,26px)", marginBottom:14, boxShadow:"0 2px 16px rgba(0,0,0,.05)" }}>
-              <h3 style={{ fontFamily:"Montserrat,sans-serif", fontSize:"clamp(10px,2.2vw,12px)", fontWeight:800, color:NAVY, margin:"0 0 clamp(14px,3vw,18px)", letterSpacing:.5, textTransform:"uppercase" }}>Profil DISC Anda</h3>
-              {KEYS.map(k=><ScoreBar key={k} k={k} score={scores[k]}/>)}
-            </div>
-
-            <div style={{ ...a(.2), display:"grid", gridTemplateColumns:"1fr 1fr", gap:"clamp(8px,2vw,12px)", marginBottom:14 }}>
-              {KEYS.map(k=>{
-                const dd=DISC[k], isD=k===dom, isS=k===sec;
+            <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:18}}>
+              {STEPS.map((step,i)=>{
+                const isActive=i===si&&!done,isDone=i<si||done;
                 return (
-                  <div key={k} style={{ background:"#fff", borderRadius:16, padding:"clamp(14px,3vw,18px) clamp(12px,2.5vw,16px)", boxShadow:"0 2px 12px rgba(0,0,0,.05)", border:`2px solid ${isD?dd.color:isS?dd.color+"66":"#EEF0F5"}`, position:"relative", textAlign:"center" }}>
-                    {isD&&<div style={{ position:"absolute", top:8, right:8, background:dd.color, color:"#fff", fontFamily:"Montserrat,sans-serif", fontSize:"clamp(7px,1.5vw,9px)", fontWeight:800, padding:"2px 7px", borderRadius:10, letterSpacing:.5 }}>DOMINAN</div>}
-                    <ResultImage k={k}/>
-                    <div style={{ fontFamily:"Montserrat,sans-serif", fontWeight:900, fontSize:"clamp(16px,4vw,22px)", color:dd.color }}>{k}</div>
-                    <div style={{ fontFamily:"Montserrat,sans-serif", fontWeight:700, fontSize:"clamp(9px,2vw,11px)", color:dd.color, marginTop:3 }}>{dd.full}</div>
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"clamp(8px,2vw,11px) clamp(10px,2.5vw,14px)",borderRadius:12,background:isDone?"#F0FDF4":isActive?"#EFF6FF":"#F7F8FC",border:`1px solid ${isDone?"#BBF7D0":isActive?"#BFDBFE":"#E8ECF3"}`,transition:"all .3s"}}>
+                    <div style={{width:24,height:24,borderRadius:"50%",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",background:isDone?"#16A34A":isActive?NAVY:"#E2E6EF",color:isDone||isActive?"#fff":"#9AA3B2",fontSize:"clamp(10px,2vw,11.5px)",fontWeight:800,fontFamily:"Montserrat,sans-serif",transition:"all .3s"}}>
+                      {isDone?"✓":i+1}
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{fontFamily:"Montserrat,sans-serif",fontSize:"clamp(11px,2.2vw,12.5px)",fontWeight:600,color:isDone?"#16A34A":isActive?NAVY:"#9AA3B2"}}>{step.label}</div>
+                      {isActive&&<div style={{marginTop:4,height:3,background:"#E2E6EF",borderRadius:99,overflow:"hidden"}}><div style={{width:`${spct}%`,height:"100%",background:GOLD,borderRadius:99,transition:"width .08s linear"}}/></div>}
+                    </div>
                   </div>
                 );
               })}
             </div>
-
-            <div style={{ ...a(.26), display:"flex", gap:10, marginBottom:10 }}>
-              <button className="btn-primary" style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6 }} onClick={share}><span>📤</span> Bagikan</button>
-              <button className="btn-ghost" style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6 }} onClick={screenshot}><span>📸</span> Screenshot</button>
+            <div style={{textAlign:"center",fontSize:"clamp(11px,2.2vw,12.5px)",color:"#9AA3B2",fontStyle:"italic"}}>
+              {done?"✅ Analisis selesai!":"Mohon tunggu sebentar..."}
             </div>
-            <button className="btn-ghost" style={{ width:"100%", marginBottom:4, ...a(.3) }} onClick={onRestart}>↩ Ulangi Assessment</button>
-            <Footer/>
+          </div>
+          <Footer/>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Results ───────────────────────────────────────────────────────────
+  function ScoreBar({k,score}){
+    const [w,setW]=useState(0);
+    const pct=Math.round((score/24)*100);
+    useEffect(()=>{const t=setTimeout(()=>setW(pct),300);return()=>clearTimeout(t);},[]);
+    const d=DISC[k];
+    return (
+      <div style={{marginBottom:"clamp(12px,2.8vw,16px)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontFamily:"Montserrat,sans-serif",fontWeight:900,fontSize:"clamp(15px,3.5vw,18px)",color:d.color,width:20}}>{k}</span>
+            <span style={{fontFamily:"Poppins,sans-serif",fontSize:"clamp(12px,2.5vw,13.5px)",color:"#5A6178",fontWeight:500}}>{d.full}</span>
+          </div>
+          <div>
+            <span style={{fontFamily:"Montserrat,sans-serif",fontWeight:700,fontSize:"clamp(13px,2.8vw,15px)",color:d.color}}>{score}</span>
+            <span style={{fontFamily:"Montserrat,sans-serif",fontSize:"clamp(10px,2vw,11.5px)",color:"#B0B8C8"}}> / 24</span>
           </div>
         </div>
-      );
-    }
+        <div style={{height:"clamp(8px,1.8vw,11px)",background:"#F0F2F7",borderRadius:99,overflow:"hidden"}}>
+          <div style={{width:`${w}%`,height:"100%",background:d.color,borderRadius:99,transition:"width 1.4s cubic-bezier(.4,0,.2,1)",boxShadow:`0 0 8px ${d.color}55`}}/>
+        </div>
+      </div>
+    );
+  }
 
-    // ─── APP ──────────────────────────────────────────────────────────────
-    function App() {
-      const [page,setPage]   = useState("land");
-      const [name,setName]   = useState("");
-      const [branch,setBranch] = useState("");
-      const [qi,setQi]       = useState(0);
-      const [ans,setAns]     = useState({});
-      const [scores,setScores] = useState({D:0,I:0,S:0,C:0});
+  function Results({name,branch,scores,onRestart}){
+    const [vis,setVis]=useState(false);
+    useEffect(()=>{setTimeout(()=>setVis(true),80);},[]);
+    const sorted=KEYS.map(k=>({k,s:scores[k]})).sort((a,b)=>b.s-a.s);
+    const dom=sorted[0].k,sec=sorted[1].k,d=DISC[dom];
+    const share=async()=>{
+      const txt=`Hasil DISC Assessment:\n👤 ${name} | Cabang ${branch}\n🎯 Tipe Dominan: ${d.full} (${dom})\n📊 D:${scores.D}  I:${scores.I}  S:${scores.S}  C:${scores.C}\n\nCommunication Style Assessment · HC Learning Division · PT Mandiri Tunas Finance`;
+      if(navigator.share){try{await navigator.share({title:"DISC Result",text:txt});}catch{}}
+      else{try{await navigator.clipboard.writeText(txt);alert("Hasil disalin ke clipboard!");}catch{alert("Silakan screenshot halaman ini.");}}
+    };
+    const a=(delay)=>({opacity:vis?1:0,transform:vis?"none":"translateY(16px)",transition:`all .8s cubic-bezier(.22,1,.36,1) ${delay}s`});
+    return (
+      <div style={{minHeight:"100vh",background:"#F2F4F8",padding:"clamp(12px,4vw,24px) clamp(12px,4vw,20px) 40px",fontFamily:"Poppins,sans-serif"}}>
+        <div style={{maxWidth:560,margin:"0 auto"}}>
+          {/* Header */}
+          <div style={{...a(0),background:`linear-gradient(145deg,${NAVY},#2A5298)`,borderRadius:22,padding:"clamp(24px,5vw,36px) clamp(20px,4vw,28px)",textAlign:"center",color:"#fff",marginBottom:14,boxShadow:"0 8px 32px rgba(27,58,107,.28)"}}>
+            <div style={{display:"flex",justifyContent:"center",marginBottom:14}}>
+              <Logo h={clamp(38,50)} pill={true}/>
+            </div>
+            <div style={{fontFamily:"Montserrat,sans-serif",fontSize:"clamp(9px,2vw,10.5px)",fontWeight:700,letterSpacing:2.5,textTransform:"uppercase",opacity:.65,marginBottom:4}}>Hasil Assessment</div>
+            <h1 style={{fontFamily:"Montserrat,sans-serif",fontSize:"clamp(18px,4.5vw,23px)",fontWeight:900,margin:"6px 0 3px"}}>{name}</h1>
+            <p style={{fontSize:"clamp(12px,2.5vw,13.5px)",opacity:.65,margin:0}}>Cabang {branch}</p>
+          </div>
+          {/* Dominant + Summary */}
+          <div style={{...a(.08),background:"#fff",borderRadius:22,padding:"clamp(22px,5vw,32px)",marginBottom:14,borderTop:`5px solid ${d.color}`,boxShadow:"0 2px 18px rgba(0,0,0,.06)",textAlign:"center"}}>
+            <div style={{fontFamily:"Montserrat,sans-serif",fontSize:"clamp(9px,2vw,10.5px)",fontWeight:700,color:"#9AA3B2",letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>Tipe Komunikasi Dominan</div>
+            <div style={{width:"clamp(64px,14vw,80px)",height:"clamp(64px,14vw,80px)",borderRadius:"50%",background:d.color,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px"}}>
+              <span style={{fontFamily:"Montserrat,sans-serif",fontWeight:900,fontSize:"clamp(28px,6vw,36px)",color:"#fff"}}>{dom}</span>
+            </div>
+            <div style={{fontFamily:"Montserrat,sans-serif",fontSize:"clamp(20px,5vw,26px)",fontWeight:900,color:d.color,marginBottom:4}}>{d.full}</div>
+            <div style={{fontFamily:"Poppins,sans-serif",fontSize:"clamp(11px,2.2vw,13px)",color:"#5A6178",fontStyle:"italic",marginBottom:18}}>{d.tagline}</div>
+            {/* Communication Summary */}
+            <div style={{background:d.pale,borderRadius:14,padding:"clamp(14px,3vw,20px)",textAlign:"left",marginBottom:18,border:`1px solid ${d.color}22`}}>
+              <div style={{fontFamily:"Montserrat,sans-serif",fontSize:"clamp(9px,1.8vw,10.5px)",fontWeight:700,color:d.color,letterSpacing:1.5,textTransform:"uppercase",marginBottom:10}}>🗣 Gaya Komunikasi</div>
+              <p style={{fontFamily:"Poppins,sans-serif",fontSize:"clamp(12px,2.3vw,13.5px)",color:"#374151",lineHeight:1.8,margin:0}}>{d.summary}</p>
+            </div>
+            <div style={{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 14px",background:DISC[sec].pale,borderRadius:20,fontFamily:"Montserrat,sans-serif"}}>
+              <span style={{fontSize:"clamp(10.5px,2.2vw,12px)",color:"#5A6178"}}>Tipe sekunder:</span>
+              <span style={{fontSize:"clamp(10.5px,2.2vw,12px)",fontWeight:700,color:DISC[sec].color}}>{DISC[sec].full} ({sec})</span>
+            </div>
+          </div>
+          {/* Score bars */}
+          <div style={{...a(.14),background:"#fff",borderRadius:22,padding:"clamp(18px,4vw,26px)",marginBottom:14,boxShadow:"0 2px 16px rgba(0,0,0,.05)"}}>
+            <h3 style={{fontFamily:"Montserrat,sans-serif",fontSize:"clamp(10px,2.2vw,12px)",fontWeight:800,color:NAVY,margin:"0 0 clamp(14px,3vw,18px)",letterSpacing:.5,textTransform:"uppercase"}}>Profil DISC Anda</h3>
+            {KEYS.map(k=><ScoreBar key={k} k={k} score={scores[k]}/>)}
+          </div>
+          {/* Actions */}
+          <div style={{...a(.2),display:"flex",gap:10,marginBottom:10}}>
+            <button className="btn-primary" style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6}} onClick={share}>📤 Bagikan</button>
+            <button className="btn-ghost" style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6}} onClick={()=>alert("Cara menyimpan:\n• Android: Power + Vol Down\n• iPhone: Side + Home / Side + Vol Up\n• Desktop: Print Screen / Snipping Tool")}>📸 Screenshot</button>
+          </div>
+          <button className="btn-ghost" style={{width:"100%",marginBottom:4,...a(.24)}} onClick={onRestart}>↩ Ulangi Assessment</button>
+          <Footer/>
+        </div>
+      </div>
+    );
+  }
 
-      const start=(n,b)=>{ setName(n); setBranch(b); setAns({}); setQi(0); setPage("q"); };
-      const answer=(i,opt)=>setAns(p=>({...p,[i]:opt}));
-      const next=()=>{
-        if(qi<23){ setQi(q=>q+1); }
-        else {
-          const s={D:0,I:0,S:0,C:0};
-          for(let i=0;i<24;i++){ const a=ans[i]; if(a!==undefined) s[SHUFFLED[i].map[a]]++; }
-          setScores(s); setPage("proc");
-        }
-      };
-      const back=()=>{ if(qi>0) setQi(q=>q-1); };
-      const restart=()=>{ setPage("land"); setAns({}); setQi(0); };
+  // ── Play App ──────────────────────────────────────────────────────────
+  function PlayApp(){
+    const [page,setPage]=useState("land");
+    const [name,setName]=useState("");
+    const [branch,setBranch]=useState("");
+    const [qi,setQi]=useState(0);
+    const [ans,setAns]=useState({});
+    const [scores,setScores]=useState({D:0,I:0,S:0,C:0});
 
-      if(page==="land") return <Landing onStart={start}/>;
-      if(page==="q")    return <QuestionPage qi={qi} answers={ans} onAnswer={answer} onBack={back} onNext={next}/>;
-      if(page==="proc") return <Processing name={name} onDone={()=>setPage("res")}/>;
-      if(page==="res")  return <Results name={name} branch={branch} scores={scores} onRestart={restart}/>;
-    }
+    const start=(n,b)=>{setName(n);setBranch(b);setAns({});setQi(0);setPage("q");};
+    const answer=(i,opt)=>setAns(p=>({...p,[i]:opt}));
+    const next=()=>{
+      if(qi<23){setQi(q=>q+1);}
+      else{
+        const s={D:0,I:0,S:0,C:0};
+        for(let i=0;i<24;i++){const a=ans[i];if(a!==undefined)s[SHUFFLED[i].map[a]]++;}
+        const sorted=[...KEYS].sort((a,b)=>s[b]-s[a]);
+        db.ref("sessions/default/results").push({
+          name,branch,scores:s,dominant:sorted[0],secondary:sorted[1],timestamp:Date.now()
+        });
+        setScores(s);setPage("proc");
+      }
+    };
+    const back=()=>{if(qi>0)setQi(q=>q-1);};
+    const restart=()=>{setPage("land");setAns({});setQi(0);};
 
-    const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(<App/>);
-  </script>
+    if(page==="land") return <Landing onStart={start}/>;
+    if(page==="q")    return <QuestionPage qi={qi} answers={ans} onAnswer={answer} onBack={back} onNext={next}/>;
+    if(page==="proc") return <Processing name={name} onDone={()=>setPage("res")}/>;
+    if(page==="res")  return <Results name={name} branch={branch} scores={scores} onRestart={restart}/>;
+  }
+
+  // ── Host App ──────────────────────────────────────────────────────────
+  function HostApp(){
+    const [results,setResults]=useState([]);
+    const [screenState,setScreenState]=useState("waiting");
+    const [search,setSearch]=useState("");
+
+    useEffect(()=>{
+      const rRef=db.ref("sessions/default/results");
+      rRef.on("value",snap=>{
+        const data=snap.val()||{};
+        const arr=Object.entries(data).map(([id,v])=>({id,...v}));
+        arr.sort((a,b)=>b.timestamp-a.timestamp);
+        setResults(arr);
+      });
+      const sRef=db.ref("sessions/default/screenState");
+      sRef.on("value",snap=>{if(snap.val())setScreenState(snap.val());});
+      return()=>{rRef.off();sRef.off();};
+    },[]);
+
+    const pushScreen=(s)=>{db.ref("sessions/default/screenState").set(s);setScreenState(s);};
+    const clearAll=()=>{
+      if(!window.confirm("Hapus semua hasil? Tidak bisa dibatalkan."))return;
+      db.ref("sessions/default").remove();setResults([]);
+    };
+    const exportCSV=()=>{
+      const hdr="Nama,Cabang,Dominant,Secondary,D,I,S,C,Waktu";
+      const rows=results.map(r=>`"${r.name}","${r.branch}",${r.dominant},${r.secondary},${r.scores.D},${r.scores.I},${r.scores.S},${r.scores.C},"${new Date(r.timestamp).toLocaleString('id-ID')}"`);
+      const a=document.createElement("a");
+      a.href="data:text/csv;charset=utf-8,"+encodeURIComponent([hdr,...rows].join("\n"));
+      a.download=`DISC_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+    };
+
+    const dist=useMemo(()=>{
+      const c={D:0,I:0,S:0,C:0};
+      results.forEach(r=>{if(r.dominant)c[r.dominant]++;});
+      return c;
+    },[results]);
+
+    const filtered=results.filter(r=>
+      r.name.toLowerCase().includes(search.toLowerCase())||
+      r.branch.toLowerCase().includes(search.toLowerCase())
+    );
+
+    const scBtnSt=(s)=>({
+      padding:"9px 16px",borderRadius:10,border:"none",cursor:"pointer",
+      fontFamily:"Montserrat,sans-serif",fontSize:12,fontWeight:700,letterSpacing:.4,
+      background:screenState===s?NAVY:"#E8ECF5",color:screenState===s?"#fff":"#5A6178",transition:"all .2s"
+    });
+
+    return (
+      <div style={{minHeight:"100vh",background:"#F2F4F8",fontFamily:"Poppins,sans-serif"}}>
+        {/* Topbar */}
+        <div style={{background:`linear-gradient(135deg,${NAVY},#2A5298)`,padding:"0 32px",display:"flex",alignItems:"center",justifyContent:"space-between",height:64,boxShadow:"0 2px 16px rgba(27,58,107,.25)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:16}}>
+            <Logo h={36} pill={true}/>
+            <div>
+              <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:800,fontSize:16,color:"#fff"}}>Host Dashboard</div>
+              <div style={{fontFamily:"Montserrat,sans-serif",fontSize:11,color:"rgba(255,255,255,.5)",letterSpacing:.5}}>DISC Communication Style Assessment · MTF</div>
+            </div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span className="live-dot"/>
+            <span style={{fontFamily:"Montserrat,sans-serif",fontSize:13,color:"rgba(255,255,255,.75)",fontWeight:600}}>{results.length} peserta</span>
+          </div>
+        </div>
+
+        <div style={{padding:"24px 32px",maxWidth:1280,margin:"0 auto"}}>
+          {/* Stat cards */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16,marginBottom:24}}>
+            {KEYS.map(k=>{
+              const d=DISC[k],count=dist[k],pct=results.length?Math.round((count/results.length)*100):0;
+              return (
+                <div key={k} style={{background:"#fff",borderRadius:16,padding:"20px 22px",boxShadow:"0 2px 12px rgba(0,0,0,.06)",borderTop:`4px solid ${d.color}`}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
+                    <div>
+                      <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:900,fontSize:30,color:d.color,lineHeight:1}}>{k}</div>
+                      <div style={{fontFamily:"Poppins,sans-serif",fontSize:11,color:"#8A94A6",marginTop:3}}>{d.full}</div>
+                    </div>
+                    <div style={{textAlign:"right"}}>
+                      <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:800,fontSize:26,color:"#1E2533"}}>{count}</div>
+                      <div style={{fontFamily:"Montserrat,sans-serif",fontSize:12,color:"#8A94A6"}}>{pct}%</div>
+                    </div>
+                  </div>
+                  <div style={{height:6,background:"#F0F2F7",borderRadius:99,overflow:"hidden"}}>
+                    <div style={{width:`${pct}%`,height:"100%",background:d.color,borderRadius:99,transition:"width 1s cubic-bezier(.4,0,.2,1)"}}/>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{display:"grid",gridTemplateColumns:"1fr 320px",gap:20}}>
+            {/* Table */}
+            <div style={{background:"#fff",borderRadius:18,boxShadow:"0 2px 16px rgba(0,0,0,.06)",overflow:"hidden"}}>
+              <div style={{padding:"16px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #F0F2F7",gap:10,flexWrap:"wrap"}}>
+                <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:800,fontSize:14,color:NAVY}}>Hasil Peserta</div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Cari nama / cabang..." style={{padding:"7px 12px",fontSize:12,borderRadius:8,width:190}}/>
+                  <button onClick={exportCSV} style={{padding:"7px 14px",background:NAVY,color:"#fff",border:"none",borderRadius:8,fontFamily:"Montserrat,sans-serif",fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>↓ CSV</button>
+                  <button onClick={clearAll} style={{padding:"7px 14px",background:"#FEF2F2",color:"#C0392B",border:"1px solid #FCA5A5",borderRadius:8,fontFamily:"Montserrat,sans-serif",fontSize:11,fontWeight:700,cursor:"pointer"}}>Hapus</button>
+                </div>
+              </div>
+              <div style={{maxHeight:500,overflowY:"auto"}}>
+                {filtered.length===0?(
+                  <div style={{padding:48,textAlign:"center",color:"#9AA3B2",fontFamily:"Montserrat,sans-serif",fontSize:13}}>
+                    {results.length===0?"Menunggu peserta mengisi assessment...":"Tidak ada hasil yang cocok."}
+                  </div>
+                ):(
+                  <table className="host-table">
+                    <thead><tr><th>#</th><th>Nama</th><th>Cabang</th><th>Dominan</th><th>Sekunder</th><th style={{textAlign:"center"}}>D</th><th style={{textAlign:"center"}}>I</th><th style={{textAlign:"center"}}>S</th><th style={{textAlign:"center"}}>C</th><th>Waktu</th></tr></thead>
+                    <tbody>
+                      {filtered.map((r,i)=>{
+                        const d=DISC[r.dominant]||DISC.D,ds=DISC[r.secondary]||DISC.I;
+                        return (
+                          <tr key={r.id}>
+                            <td style={{color:"#9AA3B2",fontSize:12}}>{i+1}</td>
+                            <td style={{fontWeight:600,color:"#1E2533"}}>{r.name}</td>
+                            <td style={{color:"#5A6178"}}>{r.branch}</td>
+                            <td><span className="disc-pill" style={{background:d.pale,color:d.color}}>{r.dominant} · {d.full}</span></td>
+                            <td><span className="disc-pill" style={{background:ds.pale,color:ds.color}}>{r.secondary}</span></td>
+                            {KEYS.map(k=><td key={k} style={{textAlign:"center",fontFamily:"Montserrat,sans-serif",fontWeight:700,color:DISC[k].color}}>{r.scores?.[k]||0}</td>)}
+                            <td style={{color:"#9AA3B2",fontSize:11,whiteSpace:"nowrap"}}>{new Date(r.timestamp).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+
+            {/* Right panel */}
+            <div style={{display:"flex",flexDirection:"column",gap:16}}>
+              {/* Screen control */}
+              <div style={{background:"#fff",borderRadius:18,padding:22,boxShadow:"0 2px 12px rgba(0,0,0,.06)"}}>
+                <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:800,fontSize:13,color:NAVY,marginBottom:14}}>Kontrol Layar Proyektor</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  <button style={scBtnSt("waiting")} onClick={()=>pushScreen("waiting")}>⏳  Layar Tunggu</button>
+                  <button style={scBtnSt("live")} onClick={()=>pushScreen("live")}>📊  Hasil Live</button>
+                  <button style={scBtnSt("chart")} onClick={()=>pushScreen("chart")}>🥧  Distribusi Kelas</button>
+                </div>
+                <div style={{marginTop:14,padding:"10px 12px",background:"#F2F4F8",borderRadius:10,fontFamily:"Montserrat,sans-serif",fontSize:11,color:"#5A6178",lineHeight:1.6}}>
+                  Buka <strong>?mode=screen</strong> di tab baru lalu tampilkan di proyektor.
+                </div>
+                <a href="?mode=screen" target="_blank" style={{display:"block",marginTop:10,padding:"9px 0",textAlign:"center",background:"#EFF6FF",color:"#1D4ED8",borderRadius:10,fontFamily:"Montserrat,sans-serif",fontSize:12,fontWeight:700,textDecoration:"none"}}>
+                  Buka Layar Proyektor ↗
+                </a>
+              </div>
+              {/* Personality map */}
+              <div style={{background:"#fff",borderRadius:18,padding:22,boxShadow:"0 2px 12px rgba(0,0,0,.06)",flex:1}}>
+                <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:800,fontSize:13,color:NAVY,marginBottom:16}}>Peta Kepribadian Kelas</div>
+                {results.length===0?(
+                  <div style={{textAlign:"center",color:"#9AA3B2",fontFamily:"Montserrat,sans-serif",fontSize:12,padding:"20px 0"}}>Belum ada data</div>
+                ):(
+                  <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                    {KEYS.map(k=>{
+                      const d=DISC[k],count=dist[k],pct=results.length?Math.round((count/results.length)*100):0;
+                      return (
+                        <div key={k}>
+                          <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+                            <span style={{fontFamily:"Montserrat,sans-serif",fontWeight:700,fontSize:12,color:d.color}}>{k} · {d.full}</span>
+                            <span style={{fontFamily:"Montserrat,sans-serif",fontSize:12,color:"#5A6178"}}>{count} ({pct}%)</span>
+                          </div>
+                          <div style={{height:10,background:"#F0F2F7",borderRadius:99,overflow:"hidden"}}>
+                            <div style={{width:`${pct}%`,height:"100%",background:d.color,borderRadius:99,transition:"width 1s cubic-bezier(.4,0,.2,1)"}}/>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div style={{marginTop:6,padding:"12px 14px",background:"#F8F9FC",borderRadius:12,fontFamily:"Montserrat,sans-serif",fontSize:12,color:"#374151",lineHeight:1.7}}>
+                      <strong>Total:</strong> {results.length} peserta &nbsp;·&nbsp;
+                      <strong>Terbanyak:</strong> {KEYS.reduce((a,b)=>dist[a]>=dist[b]?a:b)} ({DISC[KEYS.reduce((a,b)=>dist[a]>=dist[b]?a:b)].full})
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Screen App ────────────────────────────────────────────────────────
+  function ScreenApp(){
+    const [results,setResults]=useState([]);
+    const [screenState,setScreenState]=useState("waiting");
+
+    useEffect(()=>{
+      const rRef=db.ref("sessions/default/results");
+      rRef.on("value",snap=>{
+        const data=snap.val()||{};
+        const arr=Object.entries(data).map(([id,v])=>({id,...v}));
+        arr.sort((a,b)=>b.timestamp-a.timestamp);
+        setResults(arr);
+      });
+      const sRef=db.ref("sessions/default/screenState");
+      sRef.on("value",snap=>{if(snap.val())setScreenState(snap.val());});
+      return()=>{rRef.off();sRef.off();};
+    },[]);
+
+    const dist=useMemo(()=>{
+      const c={D:0,I:0,S:0,C:0};
+      results.forEach(r=>{if(r.dominant)c[r.dominant]++;});
+      return c;
+    },[results]);
+
+    // WAITING
+    if(screenState==="waiting") return (
+      <div style={{minHeight:"100vh",background:`linear-gradient(145deg,${NAVY} 0%,#16305D 40%,#0F2348 100%)`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"Poppins,sans-serif",padding:48}}>
+        <Logo h={80} pill={true}/>
+        <div style={{marginTop:44,textAlign:"center"}}>
+          <div style={{fontFamily:"Montserrat,sans-serif",fontSize:"clamp(12px,1.8vw,16px)",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:"rgba(255,255,255,.45)",marginBottom:16}}>HC Learning Division · PT Mandiri Tunas Finance</div>
+          <h1 style={{fontFamily:"Montserrat,sans-serif",fontWeight:900,fontSize:"clamp(40px,7vw,80px)",color:"#fff",lineHeight:1.05,marginBottom:14}}>
+            Communication<br/><span style={{color:GOLD,fontStyle:"italic"}}>Style</span> Assessment
+          </h1>
+          <p style={{fontFamily:"Poppins,sans-serif",fontSize:"clamp(16px,2.2vw,22px)",color:"rgba(255,255,255,.5)",marginBottom:48}}>DISC · 24 Pernyataan · ±8 Menit</p>
+          <div style={{display:"flex",justifyContent:"center",gap:24,flexWrap:"wrap"}}>
+            {KEYS.map(k=>(
+              <div key={k} style={{background:"rgba(255,255,255,.07)",border:`2px solid ${DISC[k].accent}44`,borderRadius:20,padding:"22px 32px",textAlign:"center",backdropFilter:"blur(8px)"}}>
+                <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:900,fontSize:"clamp(32px,5vw,52px)",color:DISC[k].accent,lineHeight:1}}>{k}</div>
+                <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:600,fontSize:"clamp(10px,1.5vw,13px)",color:"rgba(255,255,255,.45)",marginTop:8}}>{DISC[k].full}</div>
+              </div>
+            ))}
+          </div>
+          {results.length>0&&(
+            <div style={{marginTop:40,display:"flex",alignItems:"center",gap:10,justifyContent:"center"}}>
+              <span className="live-dot" style={{width:10,height:10}}/>
+              <span style={{fontFamily:"Montserrat,sans-serif",fontSize:"clamp(13px,2vw,17px)",color:"rgba(255,255,255,.55)",fontWeight:600}}>{results.length} peserta telah menyelesaikan</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+
+    // LIVE
+    if(screenState==="live") return (
+      <div style={{minHeight:"100vh",background:"#F2F4F8",fontFamily:"Poppins,sans-serif"}}>
+        <div style={{background:`linear-gradient(135deg,${NAVY},#2A5298)`,padding:"18px 48px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{display:"flex",alignItems:"center",gap:20}}>
+            <Logo h={44} pill={true}/>
+            <div>
+              <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:900,fontSize:22,color:"#fff"}}>Hasil Live</div>
+              <div style={{fontFamily:"Montserrat,sans-serif",fontSize:12,color:"rgba(255,255,255,.5)",letterSpacing:.5}}>Communication Style Assessment · MTF</div>
+            </div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span className="live-dot" style={{width:11,height:11}}/>
+            <span style={{fontFamily:"Montserrat,sans-serif",fontSize:18,color:"#fff",fontWeight:700}}>{results.length} Peserta</span>
+          </div>
+        </div>
+        <div style={{padding:"32px 48px"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:22,marginBottom:36}}>
+            {KEYS.map(k=>{
+              const d=DISC[k],count=dist[k],pct=results.length?Math.round((count/results.length)*100):0;
+              return (
+                <div key={k} style={{background:"#fff",borderRadius:20,padding:"26px 28px",boxShadow:"0 4px 20px rgba(0,0,0,.07)",borderTop:`5px solid ${d.color}`,textAlign:"center"}}>
+                  <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:900,fontSize:56,color:d.color,lineHeight:1}}>{k}</div>
+                  <div style={{fontFamily:"Poppins,sans-serif",fontSize:13,color:"#8A94A6",marginBottom:14}}>{d.full}</div>
+                  <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:900,fontSize:40,color:"#1E2533"}}>{count}</div>
+                  <div style={{fontFamily:"Montserrat,sans-serif",fontSize:14,color:"#9AA3B2",marginBottom:16}}>orang · {pct}%</div>
+                  <div style={{height:8,background:"#F0F2F7",borderRadius:99,overflow:"hidden"}}>
+                    <div style={{width:`${pct}%`,height:"100%",background:d.color,borderRadius:99,transition:"width 1s cubic-bezier(.4,0,.2,1)"}}/>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{background:"#fff",borderRadius:20,boxShadow:"0 4px 20px rgba(0,0,0,.06)",overflow:"hidden"}}>
+            <div style={{padding:"18px 28px",borderBottom:"1px solid #F0F2F7",fontFamily:"Montserrat,sans-serif",fontWeight:800,fontSize:16,color:NAVY}}>Peserta Terbaru</div>
+            <div style={{maxHeight:360,overflowY:"auto"}}>
+              {results.slice(0,20).map(r=>{
+                const d=DISC[r.dominant]||DISC.D;
+                return (
+                  <div key={r.id} style={{display:"flex",alignItems:"center",padding:"14px 28px",borderBottom:"1px solid #F8F9FC",gap:16}}>
+                    <div style={{width:44,height:44,borderRadius:"50%",background:d.pale,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Montserrat,sans-serif",fontWeight:900,fontSize:20,color:d.color,flexShrink:0}}>{r.dominant}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:700,fontSize:16,color:"#1E2533"}}>{r.name}</div>
+                      <div style={{fontFamily:"Poppins,sans-serif",fontSize:13,color:"#8A94A6"}}>{r.branch}</div>
+                    </div>
+                    <span className="disc-pill" style={{background:d.pale,color:d.color,fontSize:13,padding:"5px 16px"}}>{r.dominant} · {d.full}</span>
+                    <span style={{fontFamily:"Montserrat,sans-serif",fontSize:13,color:"#9AA3B2"}}>{new Date(r.timestamp).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    // CHART
+    return (
+      <div style={{minHeight:"100vh",background:`linear-gradient(145deg,${NAVY} 0%,#16305D 60%,#0F2348 100%)`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"48px",fontFamily:"Poppins,sans-serif"}}>
+        <div style={{display:"flex",alignItems:"center",gap:24,marginBottom:52}}>
+          <Logo h={56} pill={true}/>
+          <div>
+            <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:900,fontSize:32,color:"#fff"}}>Peta Kepribadian Kelas</div>
+            <div style={{fontFamily:"Montserrat,sans-serif",fontSize:14,color:"rgba(255,255,255,.45)",letterSpacing:.5}}>Communication Style Assessment · {results.length} Peserta</div>
+          </div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:28,width:"100%",maxWidth:1100,marginBottom:48}}>
+          {KEYS.map(k=>{
+            const d=DISC[k],count=dist[k],pct=results.length?Math.round((count/results.length)*100):0;
+            return (
+              <div key={k} style={{background:"rgba(255,255,255,.07)",border:`2px solid ${d.color}55`,borderRadius:24,padding:"40px 28px",textAlign:"center",backdropFilter:"blur(8px)"}}>
+                <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:900,fontSize:80,color:d.accent,lineHeight:1,marginBottom:8}}>{k}</div>
+                <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:700,fontSize:14,color:"rgba(255,255,255,.55)",marginBottom:28}}>{d.full}</div>
+                <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:900,fontSize:64,color:"#fff",lineHeight:1}}>{count}</div>
+                <div style={{fontFamily:"Montserrat,sans-serif",fontSize:18,color:"rgba(255,255,255,.45)",marginBottom:22}}>orang</div>
+                <div style={{height:12,background:"rgba(255,255,255,.1)",borderRadius:99,overflow:"hidden"}}>
+                  <div style={{width:`${pct}%`,height:"100%",background:d.color,borderRadius:99,transition:"width 1.4s cubic-bezier(.4,0,.2,1)"}}/>
+                </div>
+                <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:800,fontSize:22,color:d.accent,marginTop:12}}>{pct}%</div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{display:"flex",gap:16,flexWrap:"wrap",justifyContent:"center"}}>
+          {KEYS.map(k=>(
+            <div key={k} style={{background:"rgba(255,255,255,.06)",borderRadius:16,padding:"14px 22px",border:"1px solid rgba(255,255,255,.1)",maxWidth:240}}>
+              <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:800,fontSize:12,color:DISC[k].accent,letterSpacing:1.5,marginBottom:6}}>{k} · {DISC[k].full}</div>
+              <div style={{fontFamily:"Poppins,sans-serif",fontSize:11,color:"rgba(255,255,255,.45)",lineHeight:1.6}}>{DISC[k].tagline}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Root ──────────────────────────────────────────────────────────────
+  function Root(){
+    if(MODE==="host")   return <HostApp/>;
+    if(MODE==="screen") return <ScreenApp/>;
+    return <PlayApp/>;
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<Root/>);
+</script>
 </body>
 </html>
