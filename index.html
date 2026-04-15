@@ -110,22 +110,22 @@
     D: {
       full:"Dominance", color:"#C0392B", pale:"#FEF2F2", accent:"#F87171",
       tagline:"Langsung, tegas, dan berorientasi hasil.",
-      summary:"Tipe D berkomunikasi secara langsung dan to the point. Mereka menghargai efisiensi, tidak suka basa-basi, dan ingin segera sampai pada inti persoalan. Dalam diskusi, mereka cenderung mengambil kendali dan berbicara dengan penuh keyakinan. Untuk berkomunikasi efektif dengan tipe D, sampaikan ide Anda dengan singkat, fokus pada hasil, dan hindari penjelasan yang terlalu panjang."
+      summary:"Tipe D berbicara langsung, singkat, dan selalu fokus pada hasil."
     },
     I: {
       full:"Influence", color:"#D97706", pale:"#FFFBEB", accent:"#FBBF24",
       tagline:"Antusias, ekspresif, dan penuh energi sosial.",
-      summary:"Tipe I berkomunikasi dengan hangat, penuh semangat, dan mudah membangun kedekatan. Mereka senang bercerita, berbagi pengalaman, dan menciptakan suasana yang menyenangkan. Dalam diskusi, mereka menjadi penggerak energi kelompok. Untuk berkomunikasi efektif dengan tipe I, tunjukkan antusiasme, beri ruang untuk mereka berbicara, dan bangun hubungan personal sebelum masuk ke agenda."
+      summary:"Tipe I berkomunikasi dengan hangat dan penuh semangat, mudah membangun kedekatan dengan siapa saja."
     },
     S: {
       full:"Steadiness", color:"#16A34A", pale:"#F0FDF4", accent:"#4ADE80",
       tagline:"Pendengar setia, sabar, dan menjaga harmoni.",
-      summary:"Tipe S berkomunikasi dengan tenang, penuh empati, dan hati-hati. Mereka adalah pendengar aktif yang baik dan tidak terburu-buru dalam merespons. Dalam diskusi, mereka berperan sebagai penjaga keseimbangan dan mediator konflik. Untuk berkomunikasi efektif dengan tipe S, berikan waktu yang cukup, hindari tekanan mendadak, dan tunjukkan bahwa pendapat mereka dihargai."
+      summary:"Tipe S lebih banyak mendengar daripada berbicara, dan selalu menjaga suasana tetap harmonis."
     },
     C: {
       full:"Conscientiousness", color:"#1D4ED8", pale:"#EFF6FF", accent:"#60A5FA",
       tagline:"Analitis, terstruktur, dan berbasis data.",
-      summary:"Tipe C berkomunikasi dengan terstruktur, hati-hati, dan berbasis fakta. Mereka tidak mudah menyampaikan pendapat tanpa data yang kuat, dan cenderung mengajukan banyak pertanyaan klarifikasi. Dalam diskusi, mereka menjadi pemikir kritis yang memastikan kualitas keputusan. Untuk berkomunikasi efektif dengan tipe C, siapkan data dan logika yang kuat, beri waktu untuk mereka memproses, dan hindari keputusan yang terburu-buru."
+      summary:"Tipe C berbicara berdasarkan fakta dan data, hati-hati dan terstruktur."
     }
   };
   const KEYS = ["D","I","S","C"];
@@ -398,8 +398,7 @@
             <span style={{fontFamily:"Poppins,sans-serif",fontSize:"clamp(12px,2.5vw,13.5px)",color:"#5A6178",fontWeight:500}}>{d.full}</span>
           </div>
           <div>
-            <span style={{fontFamily:"Montserrat,sans-serif",fontWeight:700,fontSize:"clamp(13px,2.8vw,15px)",color:d.color}}>{score}</span>
-            <span style={{fontFamily:"Montserrat,sans-serif",fontSize:"clamp(10px,2vw,11.5px)",color:"#B0B8C8"}}> / 24</span>
+            <span style={{fontFamily:"Montserrat,sans-serif",fontWeight:700,fontSize:"clamp(13px,2.8vw,15px)",color:d.color}}>{pct}%</span>
           </div>
         </div>
         <div style={{height:"clamp(8px,1.8vw,11px)",background:"#F0F2F7",borderRadius:99,overflow:"hidden"}}>
@@ -467,6 +466,44 @@
     );
   }
 
+  // ── Waiting Room ──────────────────────────────────────────────────────
+  function WaitingRoom({name,branch}){
+    const [dots,setDots]=useState("");
+    const [vis,setVis]=useState(false);
+    useEffect(()=>{setTimeout(()=>setVis(true),60);},[]);
+    useEffect(()=>{
+      const iv=setInterval(()=>setDots(d=>d.length>=3?"":d+"."),600);
+      return()=>clearInterval(iv);
+    },[]);
+    return (
+      <div style={{minHeight:"100vh",background:"#F2F4F8",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(12px,4vw,24px)",fontFamily:"Poppins,sans-serif"}}>
+        <div style={{width:"100%",maxWidth:480,opacity:vis?1:0,transform:vis?"none":"translateY(20px)",transition:"all .9s cubic-bezier(.22,1,.36,1)"}}>
+          <div className="card" style={{overflow:"hidden"}}>
+            <div style={{background:`linear-gradient(145deg,${NAVY},#2A5298)`,padding:"clamp(28px,6vw,44px) clamp(24px,5vw,36px)",textAlign:"center",color:"#fff"}}>
+              <div style={{display:"flex",justifyContent:"center",marginBottom:18}}><Logo h={clamp(36,48)} pill={true}/></div>
+              <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:900,fontSize:"clamp(20px,5vw,26px)",marginBottom:6}}>Siap, {name}! 👋</div>
+              <div style={{fontSize:"clamp(12px,2.5vw,14px)",opacity:.7}}>Cabang {branch}</div>
+            </div>
+            <div style={{padding:"clamp(28px,6vw,40px)",textAlign:"center"}}>
+              <div style={{width:72,height:72,borderRadius:"50%",background:"#EFF6FF",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px",fontSize:36}}>⏳</div>
+              <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:800,fontSize:"clamp(16px,4vw,20px)",color:NAVY,marginBottom:10}}>
+                Menunggu Host Memulai{dots}
+              </div>
+              <p style={{fontSize:"clamp(12px,2.5vw,13.5px)",color:"#8A94A6",lineHeight:1.7,margin:"0 0 24px"}}>
+                Anda sudah terdaftar. Sesi akan dimulai saat fasilitator mengklik <strong style={{color:NAVY}}>Mulai Sesi</strong> di dashboard host.
+              </p>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                <span className="live-dot"/>
+                <span style={{fontFamily:"Montserrat,sans-serif",fontSize:12,fontWeight:600,color:"#8A94A6"}}>Terhubung — menunggu sinyal host</span>
+              </div>
+            </div>
+            <Footer/>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── Play App ──────────────────────────────────────────────────────────
   function PlayApp(){
     const [page,setPage]=useState("land");
@@ -475,8 +512,21 @@
     const [qi,setQi]=useState(0);
     const [ans,setAns]=useState({});
     const [scores,setScores]=useState({D:0,I:0,S:0,C:0});
+    const [sessionOpen,setSessionOpen]=useState(false);
 
-    const start=(n,b)=>{setName(n);setBranch(b);setAns({});setQi(0);setPage("q");};
+    // Listen to host's session gate
+    useEffect(()=>{
+      const ref=db.ref("sessions/default/sessionOpen");
+      ref.on("value",snap=>{
+        const val=snap.val();
+        setSessionOpen(!!val);
+        // If host opens session and participant is on waiting page, auto-advance to quiz
+        if(val&&page==="wait"){setPage("q");}
+      });
+      return()=>ref.off();
+    },[page]);
+
+    const register=(n,b)=>{setName(n);setBranch(b);setAns({});setQi(0);setPage("wait");};
     const answer=(i,opt)=>setAns(p=>({...p,[i]:opt}));
     const next=()=>{
       if(qi<23){setQi(q=>q+1);}
@@ -486,14 +536,15 @@
         const sorted=[...KEYS].sort((a,b)=>s[b]-s[a]);
         db.ref("sessions/default/results").push({
           name,branch,scores:s,dominant:sorted[0],secondary:sorted[1],timestamp:Date.now()
-        });
+        }).catch(err=>console.error("Firebase write error:",err));
         setScores(s);setPage("proc");
       }
     };
     const back=()=>{if(qi>0)setQi(q=>q-1);};
     const restart=()=>{setPage("land");setAns({});setQi(0);};
 
-    if(page==="land") return <Landing onStart={start}/>;
+    if(page==="land") return <Landing onStart={register}/>;
+    if(page==="wait") return <WaitingRoom name={name} branch={branch}/>;
     if(page==="q")    return <QuestionPage qi={qi} answers={ans} onAnswer={answer} onBack={back} onNext={next}/>;
     if(page==="proc") return <Processing name={name} onDone={()=>setPage("res")}/>;
     if(page==="res")  return <Results name={name} branch={branch} scores={scores} onRestart={restart}/>;
@@ -504,21 +555,29 @@
     const [results,setResults]=useState([]);
     const [screenState,setScreenState]=useState("waiting");
     const [search,setSearch]=useState("");
+    const [sessionOpen,setSessionOpen]=useState(false);
 
     useEffect(()=>{
       const rRef=db.ref("sessions/default/results");
       rRef.on("value",snap=>{
         const data=snap.val()||{};
-        const arr=Object.entries(data).map(([id,v])=>({id,...v}));
+        const arr=Object.entries(data).map(([id,v])=>({id,...v})).filter(v=>v.name);
         arr.sort((a,b)=>b.timestamp-a.timestamp);
         setResults(arr);
       });
       const sRef=db.ref("sessions/default/screenState");
       sRef.on("value",snap=>{if(snap.val())setScreenState(snap.val());});
-      return()=>{rRef.off();sRef.off();};
+      const oRef=db.ref("sessions/default/sessionOpen");
+      oRef.on("value",snap=>{setSessionOpen(!!snap.val());});
+      return()=>{rRef.off();sRef.off();oRef.off();};
     },[]);
 
     const pushScreen=(s)=>{db.ref("sessions/default/screenState").set(s);setScreenState(s);};
+    const toggleSession=()=>{
+      const next=!sessionOpen;
+      db.ref("sessions/default/sessionOpen").set(next);
+      setSessionOpen(next);
+    };
     const clearAll=()=>{
       if(!window.confirm("Hapus semua hasil? Tidak bisa dibatalkan."))return;
       db.ref("sessions/default").remove();setResults([]);
@@ -632,6 +691,29 @@
 
             {/* Right panel */}
             <div style={{display:"flex",flexDirection:"column",gap:16}}>
+            {/* Session gate control */}
+              <div style={{background:"#fff",borderRadius:18,padding:22,boxShadow:"0 2px 12px rgba(0,0,0,.06)"}}>
+                <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:800,fontSize:13,color:NAVY,marginBottom:6}}>Status Sesi</div>
+                <div style={{fontFamily:"Poppins,sans-serif",fontSize:12,color:"#8A94A6",marginBottom:14,lineHeight:1.5}}>
+                  Peserta akan menunggu di halaman waiting room sampai Anda klik <strong>Mulai Sesi</strong>.
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+                  <span className="live-dot" style={{background:sessionOpen?"#16A34A":"#F87171"}}/>
+                  <span style={{fontFamily:"Montserrat,sans-serif",fontSize:12,fontWeight:700,color:sessionOpen?"#16A34A":"#C0392B"}}>
+                    {sessionOpen?"Sesi Berjalan":"Sesi Belum Dibuka"}
+                  </span>
+                </div>
+                <button onClick={toggleSession} style={{
+                  width:"100%",padding:"10px 0",border:"none",borderRadius:10,cursor:"pointer",
+                  fontFamily:"Montserrat,sans-serif",fontSize:13,fontWeight:800,letterSpacing:.3,
+                  background:sessionOpen?"#FEF2F2":"#F0FDF4",
+                  color:sessionOpen?"#C0392B":"#16A34A",
+                  border:`1.5px solid ${sessionOpen?"#FCA5A5":"#86EFAC"}`,
+                  transition:"all .2s"
+                }}>
+                  {sessionOpen?"⏹ Tutup Sesi":"▶ Mulai Sesi"}
+                </button>
+              </div>
               {/* Screen control */}
               <div style={{background:"#fff",borderRadius:18,padding:22,boxShadow:"0 2px 12px rgba(0,0,0,.06)"}}>
                 <div style={{fontFamily:"Montserrat,sans-serif",fontWeight:800,fontSize:13,color:NAVY,marginBottom:14}}>Kontrol Layar Proyektor</div>
